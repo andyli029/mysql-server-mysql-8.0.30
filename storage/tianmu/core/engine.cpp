@@ -1526,7 +1526,8 @@ common::TIANMUError Engine::RunLoader(THD *thd, sql_exchange *ex, TABLE_LIST *ta
   return tianmu_e;
 }
 
-bool Engine::IsTIANMURoute(THD *thd, TABLE_LIST *table_list, SELECT_LEX *selects_list,
+// stonedb8 Query_block
+bool Engine::IsTIANMURoute(THD *thd, TABLE_LIST *table_list, Query_block *selects_list,
                         int &in_case_of_failure_can_go_to_mysql, int with_insert) {
   in_case_of_failure_can_go_to_mysql = true;
 
@@ -1587,7 +1588,7 @@ bool Engine::IsTIANMUTable(TABLE *table) {
   return table && table->s->db_type() == rcbase_hton;  // table->db_type is always NULL
 }
 
-const char *Engine::GetFilename(SELECT_LEX *selects_list, int &is_dumpfile) {
+const char *Engine::GetFilename(Query_block *selects_list, int &is_dumpfile) {  // stonedb8
   // if the function returns a filename <> NULL
   // additionally is_dumpfile indicates whether it was 'select into OUTFILE' or
   // maybe 'select into DUMPFILE' if the function returns NULL it was a regular

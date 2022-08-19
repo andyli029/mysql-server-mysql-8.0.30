@@ -27,7 +27,7 @@
 #include "key.h"
 #include "lock.h"
 #include "mysqld_suffix.h"
-#include "rpl_slave.h"
+#include "rpl_replica.h" // stonedb8
 #include "sp_rcontext.h"
 #include "item_strfunc.h"
 #include "item_sum.h"

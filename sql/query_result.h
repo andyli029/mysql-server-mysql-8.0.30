@@ -212,6 +212,10 @@ class Query_result_to_file : public Query_result_interceptor {
 
   bool send_eof(THD *thd) override;
   void cleanup(THD *thd) override;
+  //TIANMU UPGRADE BEGIN // stonedb8
+  // FIXME: for tianmu. this is a kludge!
+  sql_exchange* get_sql_exchange() const { return exchange; }
+  //END
 };
 
 #define ESCAPE_CHARS "ntrb0ZN"  // keep synchronous with READ_INFO::unescape

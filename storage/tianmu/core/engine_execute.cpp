@@ -32,7 +32,7 @@ namespace Tianmu {
 namespace core {
 
 int optimize_select(THD *thd, ulong select_options, Query_result *result,
-                    SELECT_LEX *select_lex, int &optimize_after_tianmu, int &free_join);
+                    Query_block *select_lex, int &optimize_after_tianmu, int &free_join);
 
 class KillTimer {
  public:
@@ -85,7 +85,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
   tianmu_free_join = 0;
 
   SELECT_LEX_UNIT *unit = NULL;
-  SELECT_LEX *select_lex = NULL;
+  Query_block *select_lex = NULL;
   Query_result_export *se = NULL;
 
   	if (tianmu_sysvar_pushdown)
@@ -110,7 +110,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
   // query and we know that if the result goes to the file, the TIANMU_DATAFORMAT is
   // one of TIANMU formats
   int route = RCBASE_QUERY_ROUTE;
-  SELECT_LEX *save_current_select = lex->current_select();
+  Query_block *save_current_select = lex->current_select();
   List<st_select_lex_unit> derived_optimized;  // collection to remember derived
                                                // tables that are optimized
   if (thd->fill_derived_tables() && lex->derived_tables) {
@@ -122,11 +122,11 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
     res = FALSE;
     int free_join = FALSE;
     lex->thd->derived_tables_processing = TRUE;
-    for (SELECT_LEX *sl = lex->all_selects_list; sl; sl = sl->next_select_in_list())        // for all selects
+    for (Query_block *sl = lex->all_selects_list; sl; sl = sl->next_select_in_list())        // for all selects
       for (TABLE_LIST *cursor = sl->get_table_list(); cursor; cursor = cursor->next_local)  // for all tables
         if (cursor->table && cursor->is_view_or_derived()) {  // data source (view or FROM subselect)
           // optimize derived table
-          SELECT_LEX *first_select = cursor->derived_unit()->first_select();
+          Query_block *first_select = cursor->derived_unit()->first_select();
           if (first_select->next_select() && first_select->next_select()->linkage == UNION_TYPE) {  //?? only if union
             if (lex->is_explain() || cursor->derived_unit()->item) {  //??called for explain
               // OR there is subselect(?)
@@ -285,7 +285,7 @@ ret_derived:
   // optimization of derived tables must be completed
   // and derived tables must be filled
   if (route == RETURN_QUERY_TO_MYSQL_ROUTE) {
-    for (SELECT_LEX *sl = lex->all_selects_list; sl; sl = sl->next_select_in_list())
+    for (Query_block *sl = lex->all_selects_list; sl; sl = sl->next_select_in_list())
       for (TABLE_LIST *cursor = sl->get_table_list(); cursor; cursor = cursor->next_local)
         if (cursor->table && cursor->is_derived()) {
           lex->thd->derived_tables_processing = TRUE;
@@ -302,7 +302,7 @@ ret_derived:
 Prepares and optimizes a single select for Tianmu engine
 */
 int optimize_select(THD *thd, ulong select_options, Query_result *result,
-                    SELECT_LEX *select_lex, int &optimize_after_tianmu, int &free_join)
+                    Query_block *select_lex, int &optimize_after_tianmu, int &free_join)
 {
     // copied from sql_select.cpp from the beginning of mysql_select(...)
     int err = 0;
@@ -358,8 +358,8 @@ int handle_exceptions(THD *, Transaction *, bool with_error = false);
 
 int Engine::Execute(THD *thd, LEX *lex, Query_result *result_output, SELECT_LEX_UNIT *unit_for_union) {
   DEBUG_ASSERT(thd->lex == lex);
-  SELECT_LEX *selects_list = lex->select_lex;
-  SELECT_LEX *last_distinct = NULL;
+  Query_block *selects_list = lex->select_lex;
+  Query_block *last_distinct = NULL;
   if (unit_for_union != NULL) last_distinct = unit_for_union->union_distinct;
 
   int is_dumpfile = 0;
@@ -511,8 +511,8 @@ int handle_exceptions(THD *thd, Transaction *cur_connection, bool with_error) {
 
 int st_select_lex_unit::optimize_for_tianmu() {
   // copied from sql_union.cpp from the beginning of st_select_lex_unit::exec()
-  SELECT_LEX *lex_select_save = thd->lex->current_select();
-  SELECT_LEX *select_cursor = first_select();
+  Query_block *lex_select_save = thd->lex->current_select();
+  Query_block *select_cursor = first_select();
 
   if (is_executed() && !uncacheable && !thd->lex->is_explain()) return FALSE;
   executed = 1;
@@ -528,7 +528,7 @@ int st_select_lex_unit::optimize_for_tianmu() {
       // re-enabling indexes for next subselect iteration
       if (union_distinct && table->file->ha_enable_indexes(HA_KEY_SWITCH_ALL)) DEBUG_ASSERT(0);
     }
-        for (SELECT_LEX *sl = select_cursor; sl; sl = sl->next_select()) {
+        for (Query_block *sl = select_cursor; sl; sl = sl->next_select()) {
        thd->lex->set_current_select(sl);
             sl->add_active_options(SELECT_NO_UNLOCK);
             /*
@@ -622,8 +622,8 @@ int st_select_lex_unit::optimize_for_tianmu() {
 
 int st_select_lex_unit::optimize_after_tianmu()
 {
-    SELECT_LEX *lex_select_save = thd->lex->current_select();
-    for (SELECT_LEX *sl = first_select(); sl; sl = sl->next_select()) {
+    Query_block *lex_select_save = thd->lex->current_select();
+    for (Query_block *sl = first_select(); sl; sl = sl->next_select()) {
         thd->lex->set_current_select(sl);
         if (!sl->join) {
             JOIN *join = new JOIN(thd, sl);

@@ -32,6 +32,58 @@
 
 typedef uint32 my_thread_id;
 
+// stonedb8 start.
+#ifndef _WIN32
+#include <pthread.h>
+#endif
+
+#ifdef _WIN32
+typedef DWORD thread_local_key_t;
+#else
+typedef pthread_key_t thread_local_key_t;
+#endif
+
+static inline int my_create_thread_local_key(thread_local_key_t *key,
+                                             void (*destructor)(void *))
+{
+#ifdef _WIN32
+  *key= TlsAlloc();
+  return (*key == TLS_OUT_OF_INDEXES);
+#else
+  return pthread_key_create(key, destructor);
+#endif
+}
+
+static inline int my_delete_thread_local_key(thread_local_key_t key)
+{
+#ifdef _WIN32
+  return !TlsFree(key);
+#else
+  return pthread_key_delete(key);
+#endif
+}
+
+static inline void* my_get_thread_local(thread_local_key_t key)
+{
+#ifdef _WIN32
+  return TlsGetValue(key);
+#else
+  return pthread_getspecific(key);
+#endif
+}
+
+static inline int my_set_thread_local(thread_local_key_t key,
+                                      void *value)
+{
+#ifdef _WIN32
+  return !TlsSetValue(key, value);
+#else
+  return pthread_setspecific(key, value);
+#endif
+}
+
+// stonedb8 end.
+
 /**
   Retrieve the MySQL thread-local storage variant of errno.
 */

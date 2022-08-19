@@ -60,7 +60,7 @@ class Query final {
 
   void SetRoughQuery(bool set_rough) { rough_query = set_rough; }
   bool IsRoughQuery() { return rough_query; }
-  int Compile(CompiledQuery *compiled_query, SELECT_LEX *selects_list, SELECT_LEX *last_distinct, TabID *res_tab = NULL,
+  int Compile(CompiledQuery *compiled_query, Query_block *selects_list, Query_block *last_distinct, TabID *res_tab = NULL,
               bool ignore_limit = false, Item *left_expr_for_subselect = NULL,
               common::Operator *oper_for_subselect = NULL, bool ignore_minmax = false, bool for_subq_in_where = false);
   TempTable *Preexecute(CompiledQuery &qu, ResultSender *sender, bool display_now = true);

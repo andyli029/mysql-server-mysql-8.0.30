@@ -28,7 +28,9 @@
 struct CHARSET_INFO;
 struct MEM_ROOT;
 typedef unsigned int PSI_memory_key;
+// stonedb8 start
 extern thread_local MEM_ROOT **THR_MALLOC;
+//extern thread_local_key_t THR_MALLOC;
 
 void init_sql_alloc(PSI_memory_key key, MEM_ROOT *root, size_t block_size);
 

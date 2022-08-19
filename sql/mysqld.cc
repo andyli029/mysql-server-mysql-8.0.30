@@ -12349,3 +12349,6 @@ bool check_and_update_partial_revokes_sysvar(THD *thd) {
   }
   return false;
 }
+
+// stonedb8
+ulong tianmu_group_concat_max_len = 1024;

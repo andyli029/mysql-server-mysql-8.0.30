@@ -61,6 +61,10 @@
 #include "mysql/components/services/bits/psi_thread_bits.h"
 #include "mysql/status_var.h"
 #include "mysql_com.h"  // SERVER_VERSION_LENGTH
+
+// stonedb8
+#include "my_thread_local.h"               /* my_get_thread_local */
+
 #ifdef _WIN32
 #include "sql/nt_servc.h"
 #endif  // _WIN32
@@ -420,6 +424,48 @@ extern thread_local MEM_ROOT **THR_MALLOC;
 
 extern PSI_file_key key_file_binlog_cache;
 extern PSI_file_key key_file_binlog_index_cache;
+
+// stonedb8 start
+/*
+  THR_MALLOC is a key which will be used to set/get MEM_ROOT** for a thread,
+  using my_set_thread_local()/my_get_thread_local().
+*/
+//extern thread_local_key_t THR_MALLOC;
+//extern bool THR_MALLOC_initialized;
+//
+//static inline MEM_ROOT ** my_thread_get_THR_MALLOC()
+//{
+//  assert(THR_MALLOC_initialized);
+//  return (MEM_ROOT**) my_get_thread_local(THR_MALLOC);
+//}
+//
+//static inline int my_thread_set_THR_MALLOC(MEM_ROOT ** hdl)
+//{
+//  assert(THR_MALLOC_initialized);
+//  return my_set_thread_local(THR_MALLOC, hdl);
+//}
+// stonedb8
+
+/*
+  THR_THD is a key which will be used to set/get THD* for a thread,
+  using my_set_thread_local()/my_get_thread_local().
+*/
+extern MYSQL_PLUGIN_IMPORT thread_local_key_t THR_THD;
+extern bool THR_THD_initialized;
+
+static inline THD * my_thread_get_THR_THD()
+{
+  if (!THR_THD_initialized) return NULL;
+  return (THD*)my_get_thread_local(THR_THD);
+}
+
+static inline int my_thread_set_THR_THD(THD *thd)
+{
+  assert(THR_THD_initialized);
+  return my_set_thread_local(THR_THD, thd);
+}
+
+// stonedb8 end
 
 #ifdef HAVE_PSI_INTERFACE
 
@@ -839,4 +885,8 @@ extern Deployed_components *g_deployed_components;
 extern bool opt_persist_sensitive_variables_in_plaintext;
 
 void persisted_variables_refresh_keyring_support();
+
+// stonedb8
+extern ulong tianmu_group_concat_max_len;
+
 #endif /* MYSQLD_INCLUDED */
