@@ -44,7 +44,7 @@ int TableUnmysterify(TABLE_LIST *tab, const char *&database_name, const char *&t
   return RCBASE_QUERY_ROUTE;
 }
 
-int JudgeErrors(SELECT_LEX *sl) {
+int JudgeErrors(Query_block *sl) {
   if (!sl->join) {
     return RETURN_QUERY_TO_MYSQL_ROUTE;
   }
@@ -76,7 +76,7 @@ int JudgeErrors(SELECT_LEX *sl) {
   return RCBASE_QUERY_ROUTE;
 }
 
-void SetLimit(SELECT_LEX *sl, SELECT_LEX *gsl, int64_t &offset_value, int64_t &limit_value) {
+void SetLimit(Query_block *sl, Query_block *gsl, int64_t &offset_value, int64_t &limit_value) {
   if (sl->select_limit && (!gsl || sl->select_limit != gsl->select_limit)) {
     limit_value = sl->select_limit->val_int();
     if (limit_value == UINT_MAX) { /* this value seems to be sometimes
@@ -842,7 +842,7 @@ bool Query::IsLocalColumn(Item *item, const TabID &tmp_table) {
   return cq->ExistsInTempTable(tab, tmp_table);
 }
 
-int Query::Compile(CompiledQuery *compiled_query, SELECT_LEX *selects_list, SELECT_LEX *last_distinct, TabID *res_tab,
+int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Query_block *last_distinct, TabID *res_tab,
                    bool ignore_limit, Item *left_expr_for_subselect, common::Operator *oper_for_subselect,
                    bool ignore_minmax, bool for_subq_in_where) {
   MEASURE_FET("Query::Compile(...)");
@@ -924,7 +924,7 @@ int Query::Compile(CompiledQuery *compiled_query, SELECT_LEX *selects_list, SELE
     global_order = &(selects_list->join->unit->global_parameters()->order_list);
   }
 
-  for (SELECT_LEX *sl = selects_list; sl; sl = sl->next_select()) {
+  for (Query_block *sl = selects_list; sl; sl = sl->next_select()) {
     int64_t limit_value = -1;
     int64_t offset_value = -1;
 
