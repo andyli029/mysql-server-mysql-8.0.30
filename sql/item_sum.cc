@@ -4675,6 +4675,20 @@ void Item_func_group_concat::print(const THD *thd, String *str,
   str->append(STRING_WITH_LEN("\')"));
 }
 
+// stonedb8
+enum_order Item_func_group_concat::direction()
+{
+  if (m_order_arg_count)
+  {
+    for (uint i= 0 ; i < m_order_arg_count ; i++)
+    {
+      //just return the 1st arg order as Tianmu only support one
+      return order_array[i].direction;
+    }
+  }
+  return ORDER_NOT_RELEVANT;
+}
+
 bool Item_non_framing_wf::fix_fields(THD *thd, Item **items) {
   if (super::fix_fields(thd, items)) return true;
 

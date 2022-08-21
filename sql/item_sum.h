@@ -2203,6 +2203,11 @@ class Item_func_group_concat final : public Item_sum {
     unsupported_as_wf();
     return true;
   }
+
+  // stonedb8
+  enum_order direction();
+  String* get_separator() { return separator; }
+  bool get_distinct() { return distinct; }
 };
 
 /**
