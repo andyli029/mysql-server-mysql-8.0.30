@@ -26,8 +26,8 @@
 
 #include "key.h"
 #include "lock.h"
-#include "mysqld_suffix.h"
-#include "rpl_replica.h" // stonedb8
+//#include ""// stonedb8 "mysqld_suffix.h" deleted by 8 about MYSQL_SERVER_SUFFIX
+#include "rpl_replica.h"
 #include "sp_rcontext.h"
 #include "item_strfunc.h"
 #include "item_sum.h"
@@ -50,6 +50,8 @@
 #include "my_thread_local.h"
 #include "mysql_com.h"
 #include "probes_mysql.h"
+#include "mysql/plugin.h"
+#include "sql/mysqld.h"
 
 /* Putting macros named like `max', `min' or `test'
  * into a header is a terrible idea. */
