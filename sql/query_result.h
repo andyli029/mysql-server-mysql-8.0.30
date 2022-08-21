@@ -225,10 +225,17 @@ class Query_result_to_file : public Query_result_interceptor {
 */
 #define NUMERIC_CHARS ".0123456789e+-"
 
-class Query_result_export final : public Query_result_to_file {
+class Query_result_export /*final*/ : public Query_result_to_file { // stonedb8
+// stonedb8 start
+//TIANMU UPGRADE BEGIN
+ protected: // FIXME: for tianmu
   size_t field_term_length;
-  int field_sep_char, escape_char, line_sep_char;
-  int field_term_char;  // first char of FIELDS TERMINATED BY or MAX_INT
+  int field_sep_char,escape_char,line_sep_char;
+  int field_term_char; // first char of FIELDS TERMINATED BY or MAX_INT
+  bool fixed_row_size;
+ private:
+// TIANMU UPGRADE END
+// stonedb8 end
   /*
     The is_ambiguous_field_sep field is true if a value of the field_sep_char
     field is one of the 'n', 't', 'r' etc characters
@@ -247,7 +254,7 @@ class Query_result_export final : public Query_result_to_file {
     (see the NUMERIC_CHARS constant value).
   */
   bool is_unsafe_field_sep;
-  bool fixed_row_size;
+  // bool fixed_row_size; // stonedb8
   const CHARSET_INFO *write_cs;  // output charset
  public:
   explicit Query_result_export(sql_exchange *ex) : Query_result_to_file(ex) {}
