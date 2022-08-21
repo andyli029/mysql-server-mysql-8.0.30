@@ -820,7 +820,7 @@ int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
       if (item->type() == Item::FIELD_ITEM)
         append_identifier(thd, &pfields, item->item_name.ptr(), std::strlen(item->item_name.ptr()));
       else
-        item->print(&pfields, QT_ORDINARY);
+        item->print(thd, &pfields, QT_ORDINARY); // stonedb8: print() add param thd
     }
     pfields.append(")");
   }
