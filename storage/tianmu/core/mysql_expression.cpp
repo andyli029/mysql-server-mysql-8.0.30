@@ -66,7 +66,7 @@ bool MysqlExpression::HandledResultType(Item *item) {
   }
 
   return (type == INT_RESULT) || (type == REAL_RESULT) ||
-         ((type == DECIMAL_RESULT) && (item->decimals != NOT_FIXED_DEC)) ||
+         ((type == DECIMAL_RESULT) && (item->decimals != DECIMAL_NOT_SPECIFIED)) ||
          ((type == STRING_RESULT) && (item->max_length <= (uint32_t)4294967295U));
 }
 
