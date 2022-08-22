@@ -784,7 +784,7 @@ int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
   lf_info = (LOAD_FILE_INFO *)iop.GetLogInfo();
   THD *thd = lf_info->thd;
   sql_exchange *ex = thd->lex->exchange;
-  TABLE *table = thd->lex->select_lex->table_list.first->table;
+  TABLE *table = thd->lex->query_block->table_list.first->table;
   if (ex == nullptr || table == nullptr) return -1;
   auto pa = fs::path(iop.GetTableName());
   std::tie(db_name, tab_name) = std::make_tuple(pa.parent_path().filename().native(), pa.filename().native());

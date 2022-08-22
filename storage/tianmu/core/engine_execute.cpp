@@ -84,13 +84,13 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
   optimize_after_tianmu = FALSE;
   tianmu_free_join = 0;
 
-  SELECT_LEX_UNIT *unit = NULL;
+  Query_expression *unit = NULL;
   Query_block *select_lex = NULL;
   Query_result_export *se = NULL;
 
   	if (tianmu_sysvar_pushdown)
         thd->variables.optimizer_switch|=OPTIMIZER_SWITCH_ENGINE_CONDITION_PUSHDOWN;
-  if (!IsTIANMURoute(thd, lex->query_tables, lex->select_lex, in_case_of_failure_can_go_to_mysql, with_insert)) {
+  if (!IsTIANMURoute(thd, lex->query_tables, lex->query_block, in_case_of_failure_can_go_to_mysql, with_insert)) {
     return RETURN_QUERY_TO_MYSQL_ROUTE;
   }
 
@@ -122,7 +122,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
     res = FALSE;
     int free_join = FALSE;
     lex->thd->derived_tables_processing = TRUE;
-    for (Query_block *sl = lex->all_selects_list; sl; sl = sl->next_select_in_list())        // for all selects
+    for (Query_block *sl = lex->all_query_blocks_list; sl; sl = sl->next_select_in_list())        // for all selects
       for (TABLE_LIST *cursor = sl->get_table_list(); cursor; cursor = cursor->next_local)  // for all tables
         if (cursor->table && cursor->is_view_or_derived()) {  // data source (view or FROM subselect)
           // optimize derived table
@@ -162,7 +162,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
   se = dynamic_cast<Query_result_export *>(result);
   if (se != NULL) result = new exporter::select_tianmu_export(se);
   // prepare, optimize and execute the main query
-  select_lex = lex->select_lex;
+  select_lex = lex->query_block;
   unit = lex->unit;
   if (select_lex->next_select()) {  // it is union
     if (!(res = unit->prepare(thd, result, (ulong)(SELECT_NO_UNLOCK | setup_tables_done_option),0))) {
@@ -285,7 +285,7 @@ ret_derived:
   // optimization of derived tables must be completed
   // and derived tables must be filled
   if (route == RETURN_QUERY_TO_MYSQL_ROUTE) {
-    for (Query_block *sl = lex->all_selects_list; sl; sl = sl->next_select_in_list())
+    for (Query_block *sl = lex->all_query_blocks_list; sl; sl = sl->next_select_in_list())
       for (TABLE_LIST *cursor = sl->get_table_list(); cursor; cursor = cursor->next_local)
         if (cursor->table && cursor->is_derived()) {
           lex->thd->derived_tables_processing = TRUE;
@@ -356,9 +356,9 @@ int optimize_select(THD *thd, ulong select_options, Query_result *result,
 
 int handle_exceptions(THD *, Transaction *, bool with_error = false);
 
-int Engine::Execute(THD *thd, LEX *lex, Query_result *result_output, SELECT_LEX_UNIT *unit_for_union) {
+int Engine::Execute(THD *thd, LEX *lex, Query_result *result_output, Query_expression *unit_for_union) {
   DEBUG_ASSERT(thd->lex == lex);
-  Query_block *selects_list = lex->select_lex;
+  Query_block *selects_list = lex->query_block;
   Query_block *last_distinct = NULL;
   if (unit_for_union != NULL) last_distinct = unit_for_union->union_distinct;
 

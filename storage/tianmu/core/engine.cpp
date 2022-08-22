@@ -852,7 +852,7 @@ void Engine::UpdateAndStoreColumnComment(TABLE *table, int field_id, Field *sour
     full_comment[len - 1] = 0;
 
     char *pos = full_comment + source_field->comment.length;
-    if (source_field->comment.length) {
+    if (source_field->comment.length) {./storage/tianmu/core/engine_execute.cpp:93
       std::memcpy(full_comment, source_field->comment.str, source_field->comment.length);
       *pos++ = ';';
       *pos++ = ' ';
@@ -1127,7 +1127,7 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
     sql_exchange ex("buffered_insert", 0, FILETYPE_MEM);
     ex.file_name = const_cast<char *>(addr.c_str());
     ex.skip_lines = tid;  // this is ugly...
-    thd->lex->select_lex->context.resolve_in_table_list_only(&tl);
+    thd->lex->query_block->context.resolve_in_table_list_only(&tl);
     if (open_temporary_tables(thd, &tl)) {
         // error/////
     }
