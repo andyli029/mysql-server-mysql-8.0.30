@@ -74,7 +74,7 @@ void Item_tianmufield::SetType(DataType t) {
       break;
 
     case DataType::ValueType::VT_FLOAT:
-      ivalue = new Item_float(0.0, NOT_FIXED_DEC);
+      ivalue = new Item_float(0.0, DECIMAL_NOT_SPECIFIED);
       break;
 
     case DataType::ValueType::VT_STRING:

@@ -982,7 +982,7 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, std::string &value) {
 
   const auto it = thd->user_vars.find(var_data);
   if(it == thd->user_vars.end()) return 1;
-  it->second->val_str(&null_val, &str, NOT_FIXED_DEC);
+  it->second->val_str(&null_val, &str, DECIMAL_NOT_SPECIFIED);
   //stonedb8 end
   if (null_val) return 2;
   value = std::string(str.ptr());
@@ -1033,7 +1033,7 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, longlong &result, std::stri
     bool null_value;
     String str;
 
-    m_entry->second->val_str(&null_value, &str, NOT_FIXED_DEC);
+    m_entry->second->val_str(&null_value, &str, DECIMAL_NOT_SPECIFIED);
     var_data = std::string(str.ptr());
 
     if (vn == tianmu_var_name::TIANMU_DATAFORMAT || vn == tianmu_var_name::TIANMU_REJECT_FILE_PATH) {
