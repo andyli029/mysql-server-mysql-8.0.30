@@ -608,7 +608,7 @@ std::shared_ptr<TableOption> Engine::GetTableOption(const std::string &table, TA
 void Engine::CreateTable(const std::string &table, TABLE *form) { RCTable::CreateNew(GetTableOption(table, form)); }
 
 AttributeTypeInfo Engine::GetAttrTypeInfo(const Field &field) {
-  bool auto_inc = field.flags & AUTO_INCREMENT_FLAG;
+  bool auto_inc = field.is_flag_set(AUTO_INCREMENT_FLAG);
   if (auto_inc && field.part_of_key.to_ulonglong() == 0) {
     throw common::AutoIncException("AUTO_INCREMENT can be only declared on primary key column!");
   }
@@ -649,7 +649,7 @@ AttributeTypeInfo Engine::GetAttrTypeInfo(const Field &field) {
     case MYSQL_TYPE_FLOAT:
     case MYSQL_TYPE_DOUBLE:
     case MYSQL_TYPE_LONGLONG:
-      if (field.flags & UNSIGNED_FLAG)
+      if (field.is_flag_set(UNSIGNED_FLAG))
         throw common::UnsupportedDataTypeException("UNSIGNED data types are not supported.");
       [[fallthrough]];
     case MYSQL_TYPE_YEAR:
@@ -672,7 +672,7 @@ AttributeTypeInfo Engine::GetAttrTypeInfo(const Field &field) {
         DTCollation coll(fstr->charset(), fstr->derivation());
         if (fmt == common::PackFmt::TRIE && types::IsCaseInsensitive(coll)) {
           TIANMU_LOG(LogCtl_Level::ERROR, "TRIE can not work with case-insensitive collation: %s!",
-                      coll.collation->name);
+                      coll.collation->m_coll_name); // stonedb8
           throw common::UnsupportedDataTypeException();
         }
         if (fstr->charset() != &my_charset_bin)
@@ -689,7 +689,7 @@ AttributeTypeInfo Engine::GetAttrTypeInfo(const Field &field) {
       throw common::UnsupportedDataTypeException();
     }
     case MYSQL_TYPE_NEWDECIMAL: {
-      if (field.flags & UNSIGNED_FLAG)
+      if (field.is_flag_set(UNSIGNED_FLAG))
         throw common::UnsupportedDataTypeException("UNSIGNED data types are not supported.");
       const Field_new_decimal *fnd = ((const Field_new_decimal *)&field);
       if (/*fnd->precision > 0 && */ fnd->precision <= 18 /*&& fnd->dec >= 0*/
