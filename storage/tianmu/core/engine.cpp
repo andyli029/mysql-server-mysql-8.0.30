@@ -951,16 +951,12 @@ std::string get_parameter_name(enum tianmu_var_name vn) {
 int get_parameter(THD *thd, enum tianmu_var_name vn, double &value) {
   std::string var_data = get_parameter_name(vn);
   //stonedb8 begin
-
   bool null_val;
 
   const auto it = thd->user_vars.find(var_data);
-
   if(it == thd->user_vars.end()) return 1;
-
   value = it->second->val_real(&null_val);
   //stonedb8 end
-
   if (null_val) return 2;
   return 0;
 }
@@ -971,12 +967,9 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, int64_t &value) {
   bool null_val;
 
   const auto it = thd->user_vars.find(var_data);
-
   if(it == thd->user_vars.end()) return 1;
-
   it->second->val_int(&null_val);
   //stonedb8 end
-
   if (null_val) return 2;
   return 0;
 }
@@ -984,18 +977,13 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, int64_t &value) {
 int get_parameter(THD *thd, enum tianmu_var_name vn, std::string &value) {
   //stonedb8 begin
   bool null_val;
-
   std::string var_data = get_parameter_name(vn);
-
   String str;
 
   const auto it = thd->user_vars.find(var_data);
-
   if(it == thd->user_vars.end()) return 1;
-
   it->second->val_str(&null_val, &str, NOT_FIXED_DEC);
   //stonedb8 end
-
   if (null_val) return 2;
   value = std::string(str.ptr());
 
@@ -1005,7 +993,6 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, std::string &value) {
 int get_parameter(THD *thd, enum tianmu_var_name vn, longlong &result, std::string &s_result) {
   //stonedb8 begin
   std::string var_data = get_parameter_name(vn);
-
   const auto m_entry = thd->user_vars.find(var_data);
   
   if(it == thd->user_vars.end()) return 1;
@@ -1014,7 +1001,7 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, longlong &result, std::stri
     switch (vn) {
       case tianmu_var_name::TIANMU_ABORT_ON_THRESHOLD: {
         double dv;
-        my_bool null_value;
+        bool null_value;
         my_decimal v;
 
         m_entry->second->val_decimal(&null_value, &v);
