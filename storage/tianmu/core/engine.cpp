@@ -395,7 +395,7 @@ void Engine::EncodeRecord(const std::string &table_path, int tid, Field **field,
     Field *f = field[i];
 
     size_t length;
-    if (f->flags & BLOB_FLAG)
+    if (f->is_flag_set(BLOB_FLAG)) // stonedb8
       length = dynamic_cast<Field_blob *>(f)->get_length();
     else
       length = f->row_pack_length();

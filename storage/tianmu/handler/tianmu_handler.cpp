@@ -1528,7 +1528,7 @@ void TianmuHandler::key_convert(const uchar *key, uint key_len, std::vector<uint
     if (f->is_null()) {
       throw common::Exception("Priamry key part can not be NULL");
     }
-    if (f->flags & BLOB_FLAG)
+    if (f->is_flag_set(BLOB_FLAG)) // stonedb8
       length = dynamic_cast<Field_blob *>(f)->get_length();
     else
       length = f->row_pack_length();
