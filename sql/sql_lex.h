@@ -1792,6 +1792,13 @@ class Query_block {
   void renumber(LEX *lex);
 
   /**
+   Set pointer to corresponding JOIN object.
+   The function sets the pointer only after acquiring THD::LOCK_query_plan
+   mutex. This is needed to avoid races when EXPLAIN FOR CONNECTION is used.
+*/
+  void set_join(JOIN *join_arg);
+
+  /**
     Does permanent transformations which are local to a query block (which do
     not merge it to another block).
   */

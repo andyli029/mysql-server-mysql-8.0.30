@@ -4398,6 +4398,14 @@ void Query_block::include_chain_in_global(Query_block **start) {
   *start = this;
 }
 
+//TODO: // stonedb8
+void Query_block::set_join(JOIN *join_arg)
+{
+
+  join= join_arg;
+}
+
+
 /**
    Helper function which handles the "ON conditions" part of
    Query_block::get_optimizable_conditions().
