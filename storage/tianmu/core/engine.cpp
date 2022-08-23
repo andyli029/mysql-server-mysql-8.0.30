@@ -897,11 +897,11 @@ void Engine::RemoveTx(Transaction *tx) {
 
 Transaction *Engine::CreateTx(THD *thd) {
   // the transaction should be created by owner THD
-  ASSERT(thd->ha_data[m_slot].ha_ptr == NULL, "Nested transaction is not supported!");
+  ASSERT(thd->get_ha_data(m_slot)->ha_ptr == NULL, "Nested transaction is not supported!"); // stonedb8
   ASSERT(current_txn_ == NULL, "Previous transaction is not finished!");
 
   current_txn_ = new Transaction(thd);
-  thd->ha_data[m_slot].ha_ptr = current_txn_;
+  thd->get_ha_data(m_slot)->ha_ptr = current_txn_; // stonedb8
 
   AddTx(current_txn_);
 
@@ -909,18 +909,18 @@ Transaction *Engine::CreateTx(THD *thd) {
 }
 
 Transaction *Engine::GetTx(THD *thd) {
-  if (thd->ha_data[m_slot].ha_ptr == nullptr) return CreateTx(thd);
-  return static_cast<Transaction *>(thd->ha_data[m_slot].ha_ptr);
+  if (thd->get_ha_data(m_slot)->ha_ptr == nullptr) return CreateTx(thd);
+  return static_cast<Transaction *>(thd->get_ha_data(m_slot)->ha_ptr);
 }
 
 void Engine::ClearTx(THD *thd) {
-  ASSERT(current_txn_ == (Transaction *)thd->ha_data[m_slot].ha_ptr, "Bad transaction");
+  ASSERT(current_txn_ == (Transaction *)thd->get_ha_data(m_slot)->ha_ptr, "Bad transaction");
 
   if (current_txn_ == nullptr) return;
 
   RemoveTx(current_txn_);
   current_txn_ = nullptr;
-  thd->ha_data[m_slot].ha_ptr = NULL;
+  thd->get_ha_data(m_slot)->ha_ptr = NULL;
 }
 
 int Engine::SetUpCacheFolder(const std::string &cachefolder_path) {
