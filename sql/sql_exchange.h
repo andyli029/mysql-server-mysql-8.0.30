@@ -26,7 +26,7 @@
 struct CHARSET_INFO;
 class String;
 
-enum enum_filetype { FILETYPE_CSV, FILETYPE_XML };
+enum enum_filetype { FILETYPE_CSV, FILETYPE_XML, FILETYPE_MEM }; // TIANMU
 
 /**
   Helper for the sql_exchange class

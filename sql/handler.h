@@ -513,6 +513,12 @@ enum enum_alter_inplace_result {
 */
 #define HA_MULTI_VALUED_KEY_SUPPORT (1LL << 55)
 
+
+/*
+  The handler supports non-KEY auto_increment column
+*/
+#define HA_NON_KEY_AUTO_INC           (1LL << 56)     // TIANMU
+
 /*
   Bits in index_flags(index_number) for what you can do with index.
   If you do not implement indexes, just return zero here.
@@ -665,6 +671,7 @@ enum legacy_db_type {
   DB_TYPE_MEMCACHE,
   DB_TYPE_FALCON,
   DB_TYPE_MARIA,
+  DB_TYPE_TIANMU,     // TIANMU
   /** Performance schema engine. */
   DB_TYPE_PERFORMANCE_SCHEMA,
   DB_TYPE_TEMPTABLE,
