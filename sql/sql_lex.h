@@ -939,6 +939,10 @@ class Query_expression {
   bool optimize(THD *thd, TABLE *materialize_destination, bool create_iterators,
                 bool finalize_access_paths);
 
+  //TIANMU UPGRADE END
+  int optimize_for_tianmu();
+  int optimize_after_tianmu();
+  //END
   /**
     For any non-finalized query block, finalize it so that we are allowed to
     create iterators. Must be called after the final access path is chosen

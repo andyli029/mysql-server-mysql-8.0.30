@@ -1034,7 +1034,7 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
 
     if (sl == selects_list) {
       prev_result = tmp_table;
-      if (global_order && !selects_list->next_select()) {  // trivial union with one select and
+      if (global_order && !selects_list->next_query_block()) {  // trivial union with one select and
                                                            // ext. order by
         tmp_table = TabID();
         cq->Union(prev_result, prev_result, tmp_table, true);
