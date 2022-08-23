@@ -612,7 +612,7 @@ void RCTable::Field2VC(Field *f, loader::ValueCache &vc, size_t col) {
       f->get_time(&my_time);
       // convert to UTC
       if (!common::IsTimeStampZero(my_time)) {
-        my_bool myb;
+        bool myb;
         my_time_t secs_utc = current_txn_->Thd()->variables.time_zone->TIME_to_gmt_sec(&my_time, &myb);
         common::GMTSec2GMTTime(&my_time, secs_utc);
       }
