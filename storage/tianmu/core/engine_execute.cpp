@@ -110,7 +110,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
   // query and we know that if the result goes to the file, the TIANMU_DATAFORMAT is
   // one of TIANMU formats
   int route = RCBASE_QUERY_ROUTE;
-  Query_block *save_current_select = lex->current_select();
+  Query_block *save_current_select = lex->current_query_block();
   List<st_select_lex_unit> derived_optimized;  // collection to remember derived
                                                // tables that are optimized
   if (thd->fill_derived_tables() && lex->derived_tables) {
