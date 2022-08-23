@@ -1369,6 +1369,14 @@ void warn_about_deprecated_binary(THD *thd)
 
 %token<lexer.keyword> GTID_ONLY_SYM 1199                       /* MYSQL */
 
+
+/*
+   Tokens from TIANMU
+*/
+
+%token<lexer.keyword> ROUGHLY_SYM 1200                       /* TIANMU */
+
+
 /*
   Precedence rules used to resolve the ambiguity when using keywords as idents
   in the case e.g.:
@@ -17246,6 +17254,7 @@ query_spec_option:
         | DISTINCT            { $$= SELECT_DISTINCT; }
         | SQL_SMALL_RESULT    { $$= SELECT_SMALL_RESULT; }
         | SQL_BIG_RESULT      { $$= SELECT_BIG_RESULT; }
+        | ROUGHLY_SYM         { $$= SELECT_ROUGHLY; }       // TIANMU
         | SQL_BUFFER_RESULT   { $$= OPTION_BUFFER_RESULT; }
         | SQL_CALC_FOUND_ROWS {
             push_warning(YYTHD, Sql_condition::SL_WARNING,

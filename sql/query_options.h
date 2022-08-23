@@ -129,6 +129,6 @@
 */
 #define OPTION_NO_SUBQUERY_DURING_OPTIMIZATION (1ULL << 39)  // intern
 
-#define SELECT_ROUGHLY (1ULL << 40) //TIANMU select
+#define SELECT_ROUGHLY (1ULL << 40)  // TIANMU
 
 #endif /* QUERY_OPTIONS_INCLUDED */
