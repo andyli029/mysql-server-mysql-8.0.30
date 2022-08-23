@@ -852,7 +852,7 @@ void Engine::UpdateAndStoreColumnComment(TABLE *table, int field_id, Field *sour
     full_comment[len - 1] = 0;
 
     char *pos = full_comment + source_field->comment.length;
-    if (source_field->comment.length) {./storage/tianmu/core/engine_execute.cpp:93
+    if (source_field->comment.length) {
       std::memcpy(full_comment, source_field->comment.str, source_field->comment.length);
       *pos++ = ';';
       *pos++ = ' ';
