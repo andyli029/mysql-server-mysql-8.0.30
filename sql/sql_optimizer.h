@@ -138,6 +138,11 @@ class JOIN {
   /// Thread handler
   THD *const thd;
 
+  // TIANMU
+  List<TABLE_LIST> *join_list;
+  ulonglong  select_options;
+  // TIANMU
+
   /**
     Optimal query execution plan. Initialized with a tentative plan in
     JOIN::make_join_plan() and later replaced with the optimal plan in
