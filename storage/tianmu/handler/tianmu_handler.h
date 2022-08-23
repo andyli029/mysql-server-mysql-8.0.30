@@ -148,7 +148,7 @@ class TianmuHandler final : public handler {
   void cond_pop() override {}
   int reset() override;
 
- my_bool register_query_cache_table(THD *thd, char *table_key, size_t key_length,
+ bool register_query_cache_table(THD *thd, char *table_key, size_t key_length,
                                        qc_engine_callback *engine_callback, ulonglong *engine_data) override;
   void update_create_info(HA_CREATE_INFO *create_info) override;
   int fill_row_by_id(uchar *buf, uint64_t rowid);

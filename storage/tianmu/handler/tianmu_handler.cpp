@@ -54,12 +54,13 @@ const Alter_inplace_info::HA_ALTER_FLAGS TianmuHandler::TIANMU_SUPPORTED_ALTER_C
  pieces that are used for locking, and they are needed to function.
  */
 
-my_bool rcbase_query_caching_of_table_permitted(THD *thd, [[maybe_unused]] char *full_name,
+bool rcbase_query_caching_of_table_permitted(THD *thd, [[maybe_unused]] char *full_name,
                                                 [[maybe_unused]] uint full_name_len,
                                                 [[maybe_unused]] ulonglong *unused) {
-  if (!thd_test_options(thd, (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) return ((my_bool)TRUE);
-  return ((my_bool)FALSE);
+  if (!thd_test_options(thd, (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) return ((bool)TRUE);
+  return ((bool)FALSE);
 }
+
 
 static core::Value GetValueFromField(Field *f) {
   core::Value v;
@@ -90,7 +91,7 @@ static core::Value GetValueFromField(Field *f) {
       f->get_time(&my_time);
       // convert to UTC
       if (!common::IsTimeStampZero(my_time)) {
-        my_bool myb;
+        bool myb;
         my_time_t secs_utc = current_txn_->Thd()->variables.time_zone->TIME_to_gmt_sec(&my_time, &myb);
         common::GMTSec2GMTTime(&my_time, secs_utc);
       }
@@ -342,7 +343,7 @@ inline bool has_dup_key(std::shared_ptr<index::RCTableIndex> &indextab, TABLE *t
         auto saved = my_time.second_part;
         // convert to UTC
         if (!common::IsTimeStampZero(my_time)) {
-          my_bool myb;
+          bool myb;
           my_time_t secs_utc = current_thd->variables.time_zone->TIME_to_gmt_sec(&my_time, &myb);
           common::GMTSec2GMTTime(&my_time, secs_utc);
         }
@@ -654,7 +655,7 @@ int TianmuHandler::info(uint flag) {
 }
 
 /* this should return 0 for concurrent insert to work */
-my_bool tianmu_check_status([[maybe_unused]] void *param) { return 0; }
+bool tianmu_check_status([[maybe_unused]] void *param) { return 0; }
 
 /*
  Used for opening tables. The name will be the name of the file.
@@ -1119,7 +1120,8 @@ int TianmuHandler::start_stmt(THD *thd, thr_lock_type lock_type) {
  If current thread is in non-autocommit, we don't permit any mysql query
  caching.
  */
-my_bool TianmuHandler::register_query_cache_table(THD *thd, char *table_key, size_t key_length,
+// stonedb8
+bool TianmuHandler::register_query_cache_table(THD *thd, char *table_key, size_t key_length,
                                                    qc_engine_callback *call_back,
                                                    [[maybe_unused]] ulonglong *engine_data) {
   *call_back = rcbase_query_caching_of_table_permitted;
@@ -1616,7 +1618,7 @@ void TianmuHandler::key_convert(const uchar *key, uint key_len, std::vector<uint
         auto saved = my_time.second_part;
         // convert to UTC
         if (!common::IsTimeStampZero(my_time)) {
-          my_bool myb;
+          bool myb;
           my_time_t secs_utc = current_thd->variables.time_zone->TIME_to_gmt_sec(&my_time, &myb);
           common::GMTSec2GMTTime(&my_time, secs_utc);
         }

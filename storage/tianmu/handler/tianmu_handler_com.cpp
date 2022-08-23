@@ -39,7 +39,7 @@ namespace dbhandler {
  extentions exist for the storage engine. This is also used by the default
  rename_table and delete_table method in handler.cc.
  */
-my_bool tianmu_bootstrap = 0;
+bool tianmu_bootstrap = 0;
 
 char *strmov_str(char *dst, const char *src)
 {
@@ -176,7 +176,7 @@ bool rcbase_show_status([[maybe_unused]] handlerton *hton, THD *thd, stat_print_
   return false;
 }
 
-extern my_bool tianmu_bootstrap;
+extern bool tianmu_bootstrap;
 
 static int init_variables() {
   opt_binlog_order_commits = false;
@@ -399,7 +399,7 @@ static void update_func_str([[maybe_unused]] THD *thd, struct st_mysql_sys_var *
 
 void refresh_sys_table_func([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, void *tgt,
                             const void *save) {
-  *(my_bool *)tgt = *(my_bool *)save ? TRUE : FALSE;
+  *(bool *)tgt = *(bool *)save ? TRUE : FALSE;
 }
 
 void debug_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void *var_ptr, const void *save);

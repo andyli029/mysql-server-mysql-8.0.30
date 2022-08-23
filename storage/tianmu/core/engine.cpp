@@ -502,7 +502,7 @@ void Engine::EncodeRecord(const std::string &table_path, int tid, Field **field,
         auto saved = my_time.second_part;
         // convert to UTC
         if (!common::IsTimeStampZero(my_time)) {
-          my_bool myb;
+          bool myb;
           my_time_t secs_utc = current_thd->variables.time_zone->TIME_to_gmt_sec(&my_time, &myb);
           common::GMTSec2GMTTime(&my_time, secs_utc);
         }
