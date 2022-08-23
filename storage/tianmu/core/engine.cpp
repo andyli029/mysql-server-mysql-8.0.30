@@ -816,7 +816,8 @@ std::vector<AttrInfo> Engine::GetTableAttributesInfo(const std::string &table_pa
 
 void Engine::UpdateAndStoreColumnComment(TABLE *table, int field_id, Field *source_field, int source_field_id,
                                          CHARSET_INFO *cs) {
-  if (source_field->orig_table->s->db_type() == rcbase_hton) {  // do not use table (cont. default values)
+  // stonedb8 start convert orig_table to table, MySQL 8.0 don't have orig_table, idea from ha_innodb.cc:create_table_def
+  if (source_field->table->s->db_type() == rcbase_hton) {  // do not use table (cont. default values)
     char buf_size[256] = {0};
     char buf_ratio[256] = {0};
     uint buf_size_count = 0;
@@ -824,8 +825,9 @@ void Engine::UpdateAndStoreColumnComment(TABLE *table, int field_id, Field *sour
     int64_t sum_c = 0, sum_u = 0;
 
     std::vector<AttrInfo> attr_info =
-        GetTableAttributesInfo(source_field->orig_table->s->path.str, source_field->orig_table->s);
-
+        GetTableAttributesInfo(source_field->table->s->path.str, source_field->table->s);
+  // stonedb8 end
+  
     bool is_unique = false;
     if (source_field_id < (int)attr_info.size()) {
       is_unique = attr_info[source_field_id].actually_unique;
