@@ -1107,7 +1107,7 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
     
     /* Add thread to THD list so that's it's visible in 'show processlist' */
     thd->set_new_thread_id();
-    thd->set_current_time();
+    thd->set_time(); // stonedb8
     thd_manager->add_thd(thd);
     mysql_reset_thd_for_next_command(thd);
     thd->init_for_queries();
