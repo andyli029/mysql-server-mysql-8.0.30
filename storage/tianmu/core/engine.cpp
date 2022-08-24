@@ -1154,7 +1154,7 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
         thd->mdl_context.release_statement_locks();
 
   free_root(thd->mem_root, MYF(MY_KEEP_PREALLOC));
-  if (thd->is_fatal_error) {
+  if (thd->is_fatal_error()) {
     TIANMU_LOG(LogCtl_Level::ERROR, "LOAD DATA failed on table '%s'", tab_name.c_str());
   }
   thd->release_resources();
