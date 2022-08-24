@@ -216,7 +216,7 @@ int rcbase_init_func(void *p) {
     struct hostent *hent = NULL;
     hent = gethostbyname(glob_hostname);
     if (hent) strmov_str(global_hostIP_, inet_ntoa(*(struct in_addr *)(hent->h_addr_list[0])));
-    my_snprintf(global_serverinfo_, sizeof(global_serverinfo_), "\tServerIp:%s\tServerHostName:%s\tServerPort:%d",
+    snprintf(global_serverinfo_, sizeof(global_serverinfo_), "\tServerIp:%s\tServerHostName:%s\tServerPort:%d",
                 global_hostIP_, glob_hostname, mysqld_port);
     ha_kvstore_ = new index::KVStore();
     ha_kvstore_->Init();
