@@ -1119,9 +1119,8 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
     // Usually lex_start() is called by mysql_parse(), but we need
     // it here as the present method does not call mysql_parse().
     lex_start(thd);
-    TABLE_LIST tl;
-    tl.init_one_table(thd->strmake(thd->db().str, thd->db().length), thd->db().length, tabname.str, tabname.length,
-                      tabname.str, TL_WRITE_CONCURRENT_INSERT);//TIANMU UPGRADE
+    TABLE_LIST tl(thd->strmake(thd->db().str, thd->db().length), thd->db().length, tabname.str, tabname.length,
+                  tabname.str, TL_WRITE_CONCURRENT_INSERT); // stonedb8
     tl.updating = 1;
 
     // the table will be opened in mysql_load
@@ -1156,7 +1155,7 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
     else
         thd->mdl_context.release_statement_locks();
 
-  free_root(thd->mem_root, MYF(MY_KEEP_PREALLOC));
+  thd->mem_root->ClearForReuse(); // stonedb8
   if (thd->is_fatal_error()) {
     TIANMU_LOG(LogCtl_Level::ERROR, "LOAD DATA failed on table '%s'", tab_name.c_str());
   }
@@ -1310,7 +1309,7 @@ void Engine::LogStat() {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
     last_sample_time = t.tv_sec;
-    saved_query_id = global_query_id;
+    saved_query_id = atomic_global_query_id; // stonedb8
     saved = tianmu_stat;
     return;
   }
@@ -1323,7 +1322,7 @@ void Engine::LogStat() {
     TIANMU_LOG(LogCtl_Level::ERROR, "LogStat() called too frequently. last sample time %ld ", last_sample_time);
     return;
   }
-  query_id_t query_id = global_query_id;
+  query_id_t query_id = atomic_global_query_id; // stonedb8
   long queries = query_id - saved_query_id;
 
   {
@@ -1354,7 +1353,7 @@ void Engine::LogStat() {
       msg =
           msg + sql_statement_names[c].str + " " + std::to_string(delta) + "/" + std::to_string(sv.com_stat[c]) + ", ";
     }
-    msg = msg + "queries " + std::to_string(queries) + "/" + std::to_string(global_query_id);
+    msg = msg + "queries " + std::to_string(queries) + "/" + std::to_string(atomic_global_query_id); // stonedb8
     TIANMU_LOG(LogCtl_Level::INFO, msg.c_str());
   }
 
@@ -1717,7 +1716,7 @@ common::TIANMUError Engine::GetIOP(std::unique_ptr<system::IOParameters> &io_par
   char name[FN_REFLEN];
   char *tdb = 0;
   if (table) {
-    tdb = table->s->db.str ? table->s->db.str : (char*)thd.db().str;
+    tdb = table->s->db.str ? (char*)table->s->db.str : (char*)thd.db().str;
   } else
     tdb = (char*)thd.db().str;
 
