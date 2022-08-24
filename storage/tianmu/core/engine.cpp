@@ -1342,7 +1342,7 @@ void Engine::LogStat() {
         SQLCOM_LOAD,
     };
 
-    STATUS_VAR sv;
+  System_status_var sv; // stonedb8
 	mysql_mutex_lock(&LOCK_status);
     calc_sum_of_all_status(&sv);
 	mysql_mutex_unlock(&LOCK_status);
@@ -1491,7 +1491,7 @@ common::TIANMUError Engine::RunLoader(THD *thd, sql_exchange *ex, TABLE_LIST *ta
 
     // We must invalidate the table in query cache before binlog writing and
     // ha_autocommit_...
-    query_cache.invalidate(thd, table_list, 0);
+    //query_cache.invalidate(thd, table_list, 0);  // stonedb 8 TODO: query_cache is deleted by MySQL8
 
     COPY_INFO::Statistics stats;
     stats.records = ha_rows(tab->NoRecordsLoaded());
@@ -1500,7 +1500,7 @@ common::TIANMUError Engine::RunLoader(THD *thd, sql_exchange *ex, TABLE_LIST *ta
     tianmu_stat.load_cnt++;
 
     char name[FN_REFLEN];
-    my_snprintf(name, sizeof(name), ER(ER_LOAD_INFO), (long)stats.records,
+    snprintf(name, sizeof(name), ER(ER_LOAD_INFO), (long)stats.records,
                 0,  // deleted
                 0,  // skipped
                 (long)thd->get_stmt_da()->current_statement_cond_count());

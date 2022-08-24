@@ -102,7 +102,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
     Only register query in cache if it tables were locked above.
     Tables must be locked before storing the query in the query cache.
   */
-  query_cache.store_query(thd, thd->lex->query_tables);
+  //query_cache.store_query(thd, thd->lex->query_tables);   // stonedb 8 TODO: query_cache is deleted by MySQL8
 
   tianmu_stat.select++;
 
