@@ -49,7 +49,7 @@
 #include "my_bit.h"
 #include "my_thread_local.h"
 #include "mysql_com.h"
-#include "probes_mysql.h"
+//#include "probes_mysql.h" // stonedb8 deleted by MySQL 8.0
 // stonedb8 start
 #include "mysql/plugin.h"
 #include "sql/mysqld.h"
