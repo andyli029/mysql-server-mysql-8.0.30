@@ -54,6 +54,7 @@
 #include "mysql/plugin.h"
 #include "sql/mysqld.h"
 #include "include/my_inttypes.h"
+#include "include/my_systime.h"
 // stonedb8 end
 
 /* Putting macros named like `max', `min' or `test'
