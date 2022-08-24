@@ -952,32 +952,32 @@ std::string get_parameter_name(enum tianmu_var_name vn) {
 
 int get_parameter(THD *thd, enum tianmu_var_name vn, double &value) {
   std::string var_data = get_parameter_name(vn);
-  //stonedb8 begin
+  // stonedb8 start
   bool null_val;
 
   const auto it = thd->user_vars.find(var_data);
   if(it == thd->user_vars.end()) return 1;
   value = it->second->val_real(&null_val);
-  //stonedb8 end
+  // stonedb8 end
   if (null_val) return 2;
   return 0;
 }
 
 int get_parameter(THD *thd, enum tianmu_var_name vn, int64_t &value) {
   std::string var_data = get_parameter_name(vn);
-  //stonedb8 begin
+  // stonedb8 start
   bool null_val;
 
   const auto it = thd->user_vars.find(var_data);
   if(it == thd->user_vars.end()) return 1;
   it->second->val_int(&null_val);
-  //stonedb8 end
+  // stonedb8 end
   if (null_val) return 2;
   return 0;
 }
 
 int get_parameter(THD *thd, enum tianmu_var_name vn, std::string &value) {
-  //stonedb8 begin
+  // stonedb8 start
   bool null_val;
   std::string var_data = get_parameter_name(vn);
   String str;
@@ -985,7 +985,7 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, std::string &value) {
   const auto it = thd->user_vars.find(var_data);
   if(it == thd->user_vars.end()) return 1;
   it->second->val_str(&null_val, &str, DECIMAL_NOT_SPECIFIED);
-  //stonedb8 end
+  // stonedb8 end
   if (null_val) return 2;
   value = std::string(str.ptr());
 
@@ -993,20 +993,20 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, std::string &value) {
 }
 
 int get_parameter(THD *thd, enum tianmu_var_name vn, longlong &result, std::string &s_result) {
-  //stonedb8 begin
+  // stonedb8 start
   std::string var_data = get_parameter_name(vn);
-  const auto m_entry = thd->user_vars.find(var_data);
+  const auto entry = thd->user_vars.find(var_data);
   
-  if(it == thd->user_vars.end()) return 1;
+  if(entry == thd->user_vars.end()) return 1;
 
-  if (m_entry->second->type() == DECIMAL_RESULT) {
+  if (entry->second->type() == DECIMAL_RESULT) {
     switch (vn) {
       case tianmu_var_name::TIANMU_ABORT_ON_THRESHOLD: {
         double dv;
         bool null_value;
         my_decimal v;
 
-        m_entry->second->val_decimal(&null_value, &v);
+        entry->second->val_decimal(&null_value, &v);
         my_decimal2double(E_DEC_FATAL_ERROR, &v, &dv);
         result = *(longlong *)&dv;
         break;
@@ -1016,26 +1016,26 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, longlong &result, std::stri
         break;
     }
     return 0;
-  } else if (m_entry->second->type() == INT_RESULT) {
+  } else if (entry->second->type() == INT_RESULT) {
     switch (vn) {
       case tianmu_var_name::TIANMU_THROTTLE:
       case tianmu_var_name::TIANMU_TIANMUEXPRESSIONS:
       case tianmu_var_name::TIANMU_PARALLEL_AGGR:
       case tianmu_var_name::TIANMU_ABORT_ON_COUNT:
         bool null_value;
-        result = m_entry->second->val_int(&null_value);
+        result = entry->second->val_int(&null_value);
         break;
       default:
         result = -1;
         break;
     }
     return 0;
-  } else if (m_entry->second->type() == STRING_RESULT) {
+  } else if (entry->second->type() == STRING_RESULT) {
     result = -1;
     bool null_value;
     String str;
 
-    m_entry->second->val_str(&null_value, &str, DECIMAL_NOT_SPECIFIED);
+    entry->second->val_str(&null_value, &str, DECIMAL_NOT_SPECIFIED);
     var_data = std::string(str.ptr());
 
     if (vn == tianmu_var_name::TIANMU_DATAFORMAT || vn == tianmu_var_name::TIANMU_REJECT_FILE_PATH) {
@@ -1052,7 +1052,7 @@ int get_parameter(THD *thd, enum tianmu_var_name vn, longlong &result, std::stri
     result = 0;
     return 2;
   }
-  //stonedb8 end
+  // stonedb8 end
 }
 
 void Engine::RenameTable([[maybe_unused]] Transaction *trans_, const std::string &from, const std::string &to,
