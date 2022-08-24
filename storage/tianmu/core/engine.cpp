@@ -1134,9 +1134,12 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
         // error/////
     }
     List<Item> tmp_list;  // dummy
+    // stonedb TODO: need to analyse
+    /*
     if (mysql_load(thd, &ex, &tl, tmp_list, tmp_list, tmp_list, DUP_ERROR, false)) {
         thd->is_slave_error = 1;
     }
+    */
 
     thd->set_catalog({0, 1});//TIANMU UPGRADE
     thd->set_db({NULL,0}); /* will free the current database */
