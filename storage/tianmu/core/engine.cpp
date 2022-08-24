@@ -1107,10 +1107,10 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
     
     /* Add thread to THD list so that's it's visible in 'show processlist' */
     thd->set_new_thread_id();
-    thd->set_current_time();
+    thd->set_time(); // stonedb8
     thd_manager->add_thd(thd);
     mysql_reset_thd_for_next_command(thd);
-    thd->init_for_queries();
+    thd->init_query_mem_roots(); // stonedb8
     thd->set_db(dbname);
     // Forge LOAD DATA INFILE query which will be used in SHOW PROCESS LIST
     thd->set_query(loadquery);
@@ -1476,7 +1476,7 @@ common::TIANMUError Engine::RunLoader(THD *thd, sql_exchange *ex, TABLE_LIST *ta
     std::string table_path = GetTablePath(table);
 
     table->copy_blobs = 0;
-    thd->cuted_fields = 0L;
+    thd->num_truncated_fields = 0L; // stonedb8
 
     auto tab = current_txn_->GetTableByPath(table_path);
 
