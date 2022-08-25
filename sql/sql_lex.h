@@ -940,8 +940,8 @@ class Query_expression {
                 bool finalize_access_paths);
 
   //TIANMU UPGRADE END
-  int optimize_for_tianmu();
-  int optimize_after_tianmu();
+  int optimize_for_tianmu(THD *thd);
+  int optimize_after_tianmu(THD *thd);
   //END
   /**
     For any non-finalized query block, finalize it so that we are allowed to
