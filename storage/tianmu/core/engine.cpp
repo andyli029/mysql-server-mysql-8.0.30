@@ -1721,8 +1721,8 @@ common::TIANMUError Engine::GetRejectFileIOParameters(THD &thd, std::unique_ptr<
 common::TIANMUError Engine::GetIOP(std::unique_ptr<system::IOParameters> &io_params, THD &thd, sql_exchange &ex,
                                 TABLE *table, void *arg, bool for_exporter) {
   const CHARSET_INFO *cs = ex.cs;
-  bool local_load = for_exporter ? false : (bool)(thd.lex)->local_file;
-  uint value_list_elements = (thd.lex)->load_value_list.elements;
+  bool local_load = false; // for_exporter ? false : (bool)(thd.lex)->local_file; // stonedb8 TODO: mysql_load
+  uint value_list_elements = 0; // (thd.lex)->load_value_list.elements; // stonedb8 TODO: mysql_load
   // thr_lock_type lock_option = (thd.lex)->lock_option;
 
   int io_mode = -1;
