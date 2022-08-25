@@ -81,7 +81,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
 
   int in_case_of_failure_can_go_to_mysql;
 
-  optimize_after_tianmu = FALSE;
+  optimize_after_tianmu = false;
   tianmu_free_join = 0;
 
   Query_expression *unit = NULL;
@@ -119,9 +119,9 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
     // open_and_lock_tables(...) the function mysql_derived_filling(..)
     // optimizing and executing derived tables is passed over, then optimization
     // of derived tables must go here.
-    res = FALSE;
-    int free_join = FALSE;
-    lex->thd->derived_tables_processing = TRUE;
+    res = false;
+    int free_join = false;
+    lex->thd->derived_tables_processing = true;
     for (Query_block *sl = lex->all_query_blocks_list; sl; sl = sl->next_select_in_list())        // for all selects
       for (TABLE_LIST *cursor = sl->get_table_list(); cursor; cursor = cursor->next_local)  // for all tables
         if (cursor->table && cursor->is_view_or_derived()) {  // data source (view or FROM subselect)
@@ -144,7 +144,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
             cursor->derived_query_expression()->set_limit(thd, first_select); // stonedb8
             if (cursor->derived_query_expression()->select_limit_cnt == HA_POS_ERROR) first_select->remove_base_options(OPTION_FOUND_ROWS);
             lex->set_current_query_block(first_select);
-            int optimize_derived_after_tianmu = FALSE;
+            int optimize_derived_after_tianmu = false;
             res = optimize_select(
                             thd, ulong(first_select->active_options() | thd->variables.option_bits | SELECT_NO_UNLOCK),
                             (Query_result*)cursor->derived_result, first_select, optimize_derived_after_tianmu,
@@ -156,7 +156,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
             route = RETURN_QUERY_TO_MYSQL_ROUTE;
           if (res || route == RETURN_QUERY_TO_MYSQL_ROUTE) goto ret_derived;
         }
-    lex->thd->derived_tables_processing = FALSE;
+    lex->thd->derived_tables_processing = false;
   }
 
   se = dynamic_cast<Query_result_export *>(result);
@@ -179,7 +179,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
       else {
         int old_executed = unit->is_executed();
         res = unit->optimize_for_tianmu();  //====exec()
-        optimize_after_tianmu = TRUE;
+        optimize_after_tianmu = true;
         if (!res) {
           try {
             route = ha_rcengine_->Execute(thd, thd->lex, result, unit); // stonedb8
@@ -202,7 +202,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
             }
           } catch (ReturnMeToMySQLWithError &) {
             route = RCBASE_QUERY_ROUTE;
-            res = TRUE;
+            res = true;
           }
         }
       }
@@ -214,7 +214,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
       unit->cleanup(thd, 0);
       // stonedb8 end
 
-      optimize_after_tianmu = FALSE;
+      optimize_after_tianmu = false;
     }
   } else {
     unit->set_limit(thd, unit->global_parameters());  // the fragment of original  // stonedb8
@@ -248,7 +248,7 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
         }
       } catch (ReturnMeToMySQLWithError &) {
         route = RCBASE_QUERY_ROUTE;
-        err = TRUE;
+        err = true;
       }
     }
     if (tianmu_free_join) {  // there was a join created in an upper function
@@ -261,14 +261,14 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
         select_lex->cleanup(thd, 0);
         // stonedb8 end
 
-        optimize_after_tianmu = FALSE;
+        optimize_after_tianmu = false;
         tianmu_free_join = 0;
       }
       res = (err || thd->is_error());
     } else
       res = select_lex->join->error;
   }
-  if (select_lex->join && /*Query::IsLOJ(select_lex->join_list)*/) // stonedb8 TODO
+  if (select_lex->join /*&& *Query::IsLOJ(select_lex->join_list)*/) // stonedb8 TODO
     optimize_after_tianmu = 2;     // optimize partially (part=4), since part of LOJ
                                 // optimization was already done
   res |= (int)thd->is_error();  // the ending of original handle_select(...) */
@@ -302,12 +302,12 @@ ret_derived:
     for (Query_block *sl = lex->all_query_blocks_list; sl; sl = sl->next_select_in_list())
       for (TABLE_LIST *cursor = sl->get_table_list(); cursor; cursor = cursor->next_local)
         if (cursor->table && cursor->is_derived()) {
-          lex->thd->derived_tables_processing = TRUE;
+          lex->thd->derived_tables_processing = true;
           cursor->derived_query_expression()->optimize_after_tianmu();
         }
     lex->set_current_query_block(save_current_select);
   }
-  lex->thd->derived_tables_processing = FALSE;
+  lex->thd->derived_tables_processing = false;
 
   return route;
 }
@@ -321,7 +321,7 @@ int optimize_select(THD *thd, ulong select_options, Query_result *result,
     // copied from sql_select.cpp from the beginning of mysql_select(...)
     int err = 0;
     free_join = 1;
-    select_lex->context.resolve_in_select_list = TRUE;
+    select_lex->context.resolve_in_select_list = true;
     JOIN *join;
     if (select_lex->join != 0) {
         join = select_lex->join;
@@ -332,7 +332,7 @@ int optimize_select(THD *thd, ulong select_options, Query_result *result,
 				
 				if (result->prepare(thd, *select_lex->join->fields, select_lex->master_query_expression()) || result->prepare2())
 				{
-                    return TRUE;
+                    return true;
 
 				}
 			} else {
@@ -354,18 +354,18 @@ int optimize_select(THD *thd, ulong select_options, Query_result *result,
 			return err;
 		}
         if (result->prepare(thd, select_lex->fields, select_lex->master_query_expression()) || result->prepare2()) {
-            return TRUE;
+            return true;
         }       
         if (!(join = new JOIN(thd, select_lex)))
-            return TRUE; /* purecov: inspected */
+            return true; /* purecov: inspected */
         select_lex->set_join(join); // stonedb8 TODO
         
 	}
     join->best_rowcount = 2;
-    optimize_after_tianmu = TRUE;
+    optimize_after_tianmu = true;
 	if ((err = join->optimize(1)))
         return err;
-	return FALSE;
+	return false;
 }
 
 int handle_exceptions(THD *, Transaction *, bool with_error = false);
@@ -528,7 +528,7 @@ int Query_expression::optimize_for_tianmu() {
   Query_block *lex_select_save = thd->lex->current_select();
   Query_block *select_cursor = first_query_block();
 
-  if (is_executed() && !uncacheable && !thd->lex->is_explain()) return FALSE;
+  if (is_executed() && !uncacheable && !thd->lex->is_explain()) return false;
   executed = 1;
 
   if (uncacheable || !item || !item->assigned() || thd->lex->is_explain()) {
@@ -557,7 +557,7 @@ int Query_expression::optimize_for_tianmu() {
                 if (!join) {
                     thd->lex->set_current_query_block(lex_select_save);
                     cleanup(0);
-                    return TRUE;
+                    return true;
                 }
                 sl->set_join(join);
             }           
@@ -631,7 +631,7 @@ int Query_expression::optimize_for_tianmu() {
 
     optimized = 1;
     thd->lex->set_current_query_block(lex_select_save);
-    return FALSE;
+    return false;
 }
 
 int Query_expression::optimize_after_tianmu()
@@ -644,7 +644,7 @@ int Query_expression::optimize_after_tianmu()
             if (!join) {
                 thd->lex->set_current_query_block(lex_select_save);
                 cleanup(0);
-                return TRUE;
+                return true;
             }
             sl->set_join(join);
         }           
@@ -662,5 +662,5 @@ int Query_expression::optimize_after_tianmu()
     }
     executed = 0;
     thd->lex->set_current_query_block(lex_select_save);
-    return FALSE;
+    return false;
 }
