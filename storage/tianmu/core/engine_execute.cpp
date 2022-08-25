@@ -525,7 +525,7 @@ int handle_exceptions(THD *thd, Transaction *cur_connection, bool with_error) {
 
 int Query_expression::optimize_for_tianmu(THD *thd) {
   // copied from sql_union.cpp from the beginning of st_select_lex_unit::exec()
-  Query_block *lex_select_save = thd->lex->current_select();
+  Query_block *lex_select_save = thd->lex->current_query_block();
   Query_block *select_cursor = first_query_block();
 
   if (is_executed() && !uncacheable && !thd->lex->is_explain()) return false;
@@ -594,29 +594,29 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
         /* Send result to 'result' */
         saved_error = true;
         set_limit(global_parameters());
-        if (fake_select_lex != NULL) 
+        if (fake_query_block != NULL) 
 		{
-            thd->lex->set_current_query_block(fake_select_lex);
+            thd->lex->set_current_query_block(fake_query_block);
             if(!is_prepared()) {
-              if (prepare_fake_select_lex(thd))
+              if (prepare_fake_query_block(thd))
                   return saved_error;
             }
             JOIN *join;
-            if (fake_select_lex->join)
-                join = fake_select_lex->join;
+            if (fake_query_block->join)
+                join = fake_query_block->join;
             else {
-                if (!(join = new JOIN(thd, fake_select_lex)))
+                if (!(join = new JOIN(thd, fake_query_block)))
                     DEBUG_ASSERT(0);
-                // fake_select_lex->set_join(join);
+                // fake_query_block->set_join(join);
             }
 
             if (!join->is_optimized()) {
-                //    saved_error = join->prepare(fake_select_lex->table_list.first, 0, 0,
+                //    saved_error = join->prepare(fake_query_block->table_list.first, 0, 0,
                 //                                global_parameters->order_list.elements,
-                //                                global_parameters->order_list.first, NULL, NULL, fake_select_lex,
+                //                                global_parameters->order_list.first, NULL, NULL, fake_query_block,
                 //                                this); //STONEDB UPGRADE
                 if(!is_prepared()) {
-                  if (fake_select_lex->prepare(thd))
+                  if (fake_query_block->prepare(thd))
                       return saved_error;
                 }
             } else {
@@ -624,7 +624,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
                 join->reset();
             }
 
-            fake_select_lex->table_list.empty();
+            fake_query_block->table_list.empty();
         }
        
     }
@@ -636,7 +636,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
 
 int Query_expression::optimize_after_tianmu(THD *thd)
 {
-    Query_block *lex_select_save = thd->lex->current_select();
+    Query_block *lex_select_save = thd->lex->current_query_block();
     for (Query_block *sl = first_query_block(); sl; sl = sl->next_query_block()) {
         thd->lex->set_current_query_block(sl);
         if (!sl->join) {
@@ -654,11 +654,11 @@ int Query_expression::optimize_after_tianmu(THD *thd)
             return res;
         }
     }
-    if (fake_select_lex && fake_select_lex->join) {
-        // fake_select_lex->join must be cleaned up before returning to
+    if (fake_query_block && fake_query_block->join) {
+        // fake_query_block->join must be cleaned up before returning to
         // MySQL route, otherwise sub select + union would coredump.
-        thd->lex->set_current_query_block(fake_select_lex);
-        fake_select_lex->cleanup(0);
+        thd->lex->set_current_query_block(fake_query_block);
+        fake_query_block->cleanup(0);
     }
     executed = 0;
     thd->lex->set_current_query_block(lex_select_save);
