@@ -25,7 +25,7 @@ namespace Tianmu {
 namespace core {
 bool Engine::ConvertToField(Field *field, types::RCDataType &rcitem, std::vector<uchar> *blob_buf) {
   if (rcitem.IsNull()) {
-    std::memset(field->ptr, 0, 2);
+    std::memset(field->field_ptr(), 0, 2);
     field->set_null();
     return true;
   }

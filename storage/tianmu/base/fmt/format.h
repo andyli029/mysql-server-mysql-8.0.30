@@ -266,7 +266,6 @@ using intmax_t = __int64;
       (!defined(FMT_ICC_VERSION) || FMT_ICC_VERSION >= 1500)
 #endif
 
-#define __clang__ 1
 #ifndef FMT_USE_EXTERN_TEMPLATES
 // Clang doesn't have a feature check for extern templates so we check
 // for variadic templates which were introduced in the same version.
