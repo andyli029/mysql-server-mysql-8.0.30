@@ -51,6 +51,8 @@
 #include "mysql_com.h"
 //#include "probes_mysql.h" // stonedb8 deleted by MySQL 8.0
 // stonedb8 start
+#include "sql/sql_locale.h"
+#include "sql/derror.h"
 #include "mysql/plugin.h"
 #include "sql/mysqld.h"
 #include "include/my_inttypes.h"
@@ -84,6 +86,11 @@
 using fields_t = std::vector<enum_field_types>;
 
 my_time_t tianmu_sec_since_epoch(int year, int mon, int mday, int hour, int min, int sec);
+
+// stonedb8
+const char *ER_THD(const THD *thd, int mysql_errno) {
+  return thd->variables.lc_messages->errmsgs->lookup(mysql_errno);
+}
 
 namespace Tianmu {
 namespace common {

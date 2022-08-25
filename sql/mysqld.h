@@ -796,7 +796,18 @@ char ***get_remaining_argv();
   return ++atomic_global_query_id;
 }
 
-#define ER(X) please_use_ER_THD_or_ER_DEFAULT_instead(X)
+// stonedb8 start
+// #define ER(X) please_use_ER_THD_or_ER_DEFAULT_instead(X)
+#if defined(MYSQL_DYNAMIC_PLUGIN) && defined(_WIN32)
+extern "C" THD *_current_thd_noinline();
+static inline THD *inline_current_thd(void) { return _current_thd_noinline(); }
+#define current_thd _current_thd_noinline()
+#else
+extern thread_local THD *current_thd;
+#endif
+
+#define ER(X)         ER_THD(current_thd, X)
+// stonedb8 end
 
 /* Accessor function for _connection_events_loop_aborted flag */
 [[nodiscard]] inline bool connection_events_loop_aborted() {

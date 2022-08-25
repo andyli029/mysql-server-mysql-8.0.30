@@ -1664,7 +1664,7 @@ void Engine::ComputeTimeZoneDiffInMinutes(THD *thd, short &sign, short &minutes)
   long msecs;
   sign = 1;
   minutes = 0;
-  if (calc_time_diff(&utc, &client_zone, 1, &secs, &msecs)) sign = -1;
+  if (calc_time_diff(utc, client_zone, 1, &secs, &msecs)) sign = -1;  // stonedb8
   minutes = (short)(secs / 60);
 }
 
