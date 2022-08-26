@@ -1298,8 +1298,8 @@ CondID Query::ConditionNumberFromComparison(Item *conds, const TabID &tmp_table,
                        an_arg->type() == Item::SUBSELECT_ITEM ? negative : false, NULL, &op))
         return CondID(-1);
       if ((op == common::Operator::O_LIKE || op == common::Operator::O_NOT_LIKE) &&
-          !(an_arg->field_type() == MYSQL_TYPE_VARCHAR || an_arg->field_type() == MYSQL_TYPE_STRING ||
-            an_arg->field_type() == MYSQL_TYPE_VAR_STRING || an_arg->field_type() == MYSQL_TYPE_BLOB)) {
+          !(an_arg->data_type() == MYSQL_TYPE_VARCHAR || an_arg->data_type() == MYSQL_TYPE_STRING ||
+            an_arg->data_type() == MYSQL_TYPE_VAR_STRING || an_arg->data_type() == MYSQL_TYPE_BLOB)) {
         return CondID(-1);  // Argument of LIKE is not a string, return to MySQL.
       }
     }

@@ -395,23 +395,23 @@ DataType MysqlExpression::EvalType(TypOfVars *tv) {
       break;
     case STRING_RESULT:  // GA: in case of time item->max_length can contain
                          // invalid value
-      if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->field_type() == MYSQL_TYPE_TIME) ||
+      if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->data_type() == MYSQL_TYPE_TIME) ||
           (item->type() == Item_tianmufield::get_tianmuitem_type() &&
-           static_cast<Item_tianmufield *>(item)->IsAggregation() == false && item->field_type() == MYSQL_TYPE_TIME))
+           static_cast<Item_tianmufield *>(item)->IsAggregation() == false && item->data_type() == MYSQL_TYPE_TIME))
         type = DataType(common::CT::TIME, 17, 0, item->collation);
-      else if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->field_type() == MYSQL_TYPE_TIMESTAMP) ||
+      else if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->data_type() == MYSQL_TYPE_TIMESTAMP) ||
                (item->type() == Item_tianmufield::get_tianmuitem_type() &&
                 static_cast<Item_tianmufield *>(item)->IsAggregation() == false &&
-                item->field_type() == MYSQL_TYPE_TIMESTAMP))
+                item->data_type() == MYSQL_TYPE_TIMESTAMP))
         type = DataType(common::CT::TIMESTAMP, 17, 0, item->collation);
-      else if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->field_type() == MYSQL_TYPE_DATETIME) ||
+      else if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->data_type() == MYSQL_TYPE_DATETIME) ||
                (item->type() == Item_tianmufield::get_tianmuitem_type() &&
                 static_cast<Item_tianmufield *>(item)->IsAggregation() == false &&
-                item->field_type() == MYSQL_TYPE_DATETIME))
+                item->data_type() == MYSQL_TYPE_DATETIME))
         type = DataType(common::CT::DATETIME, 17, 0, item->collation);
-      else if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->field_type() == MYSQL_TYPE_DATE) ||
+      else if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->data_type() == MYSQL_TYPE_DATE) ||
                (item->type() == Item_tianmufield::get_tianmuitem_type() &&
-                static_cast<Item_tianmufield *>(item)->IsAggregation() == false && item->field_type() == MYSQL_TYPE_DATE))
+                static_cast<Item_tianmufield *>(item)->IsAggregation() == false && item->data_type() == MYSQL_TYPE_DATE))
         type = DataType(common::CT::DATE, 17, 0, item->collation);
       else
         // type = DataType(common::CT::STRING, item->max_length, 0,
@@ -437,9 +437,9 @@ DataType MysqlExpression::EvalType(TypOfVars *tv) {
 
 MysqlExpression::StringType MysqlExpression::GetStringType() {
   if (mysql_type == STRING_RESULT) {
-    if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->field_type() == MYSQL_TYPE_TIME) ||
+    if ((item->type() != Item_tianmufield::get_tianmuitem_type() && item->data_type() == MYSQL_TYPE_TIME) ||
         (item->type() == Item_tianmufield::get_tianmuitem_type() &&
-         static_cast<Item_tianmufield *>(item)->IsAggregation() == false && item->field_type() == MYSQL_TYPE_TIME))
+         static_cast<Item_tianmufield *>(item)->IsAggregation() == false && item->data_type() == MYSQL_TYPE_TIME))
       return StringType::STRING_TIME;
     else
       return StringType::STRING_NORMAL;
@@ -570,7 +570,7 @@ namespace {
 bool generic_item_same(Item const &l_, Item const &r_) {
   return ((&l_ == &r_) || ((l_.type() == r_.type()) && (l_.result_type() == r_.result_type()) &&
                            (l_.cast_to_int_type() == r_.cast_to_int_type()) &&
-                           (l_.string_field_type() == r_.string_field_type()) && (l_.field_type() == r_.field_type()) &&
+                           (l_.string_field_type() == r_.string_field_type()) && (l_.data_type() == r_.data_type()) &&
                            (l_.const_during_execution() == r_.const_during_execution()) && (l_ == r_)));
 }
 }  // namespace
