@@ -56,7 +56,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
     switch (item_type) {
       case Item::FIELD_ITEM: {  // regular select
         ifield = (Item_field *)item;
-        f = ifield->result_field;
+        f = ifield->get_result_field();
         auto iter_uf = used_fields.find((size_t)f);
         if (iter_uf == used_fields.end()) {
           used_fields.insert((size_t)f);
@@ -76,7 +76,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
         tmp->decimals = item->decimals;
         tmp->hybrid_type_ = item->result_type();
         tmp->unsigned_flag = item->unsigned_flag;
-        tmp->hybrid_field_type_ = item->field_type();
+        tmp->hybrid_field_type_ = item->data_type();
         tmp->collation.set(item->collation);
         tmp->value_.set_charset(item->collation.collation);
         li.replace(tmp);
@@ -95,7 +95,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
           isum_hybrid_rcbase->decimals = is->decimals;
           isum_hybrid_rcbase->hybrid_type_ = is->result_type();
           isum_hybrid_rcbase->unsigned_flag = is->unsigned_flag;
-          isum_hybrid_rcbase->hybrid_field_type_ = is->field_type();
+          isum_hybrid_rcbase->hybrid_field_type_ = is->data_type();
           isum_hybrid_rcbase->collation.set(is->collation);
           isum_hybrid_rcbase->value_.set_charset(is->collation.collation);
           li.replace(isum_hybrid_rcbase);
@@ -142,12 +142,12 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
     switch (item_type) {
       case Item::FIELD_ITEM:  // regular select
         ifield = (Item_field *)item;
-        f = ifield->result_field;
+        f = ifield->get_result_field();
         break;
       case Item::REF_ITEM:  // select from view
         iref = (Item_ref *)item;
         ifield = (Item_field *)(*iref->ref);
-        f = ifield->result_field;
+        f = ifield->get_result_field();
         break;
       default:
         break;
@@ -285,7 +285,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
       case Item::DEFAULT_VALUE_ITEM:
       case Item::FIELD_ITEM:  // regular select
         ifield = (Item_field *)item;
-        f = ifield->result_field;
+        f = ifield->get_result_field();
         // if buf_lens[col_id] is 0 means that f->ptr was not assigned
         // because it was assigned for this instance of object
         if (buf_lens[col_id] != 0) {
@@ -297,7 +297,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
       case Item::REF_ITEM:  // select from view
         iref = (Item_ref *)item;
         ifield = (Item_field *)(*iref->ref);
-        f = ifield->result_field;
+        f = ifield->get_result_field();
         if (buf_lens[col_id] != 0) {
           bitmap_set_bit(f->table->write_set, f->field_index);
           auto is_null = Engine::ConvertToField(f, rcdt, NULL);
@@ -330,7 +330,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
         // do not check COUNT_DISTINCT_FUNC, we use only this for both types
         if (sum_type == Item_sum::COUNT_FUNC || sum_type == Item_sum::SUM_BIT_FUNC) {
           isum_int_rcbase = (types::Item_sum_int_rcbase *)is;
-          Engine::Convert(is_null, value, rcdt, is->field_type());
+          Engine::Convert(is_null, value, rcdt, is->data_type());
           if (is_null) value = 0;
           isum_int_rcbase->int64_value(value);
           break;
@@ -502,14 +502,14 @@ void ResultExportSender::SendRecord(const std::vector<std::unique_ptr<types::RCD
       rcde->PutNull();
     else if (ATI::IsTxtType(rcdt.Type())) {
       types::BString val(rcdt.ToBString());
-      if (l_item->field_type() == MYSQL_TYPE_DATE) {
+      if (l_item->data_type() == MYSQL_TYPE_DATE) {
         types::RCDateTime dt;
         types::ValueParserForText::ParseDateTime(val, dt, common::CT::DATE);
         rcde->PutDateTime(dt.GetInt64());
-      } else if ((l_item->field_type() == MYSQL_TYPE_DATETIME) || (l_item->field_type() == MYSQL_TYPE_TIMESTAMP)) {
+      } else if ((l_item->data_type() == MYSQL_TYPE_DATETIME) || (l_item->data_type() == MYSQL_TYPE_TIMESTAMP)) {
         types::RCDateTime dt;
         types::ValueParserForText::ParseDateTime(val, dt, common::CT::DATETIME);
-        if (l_item->field_type() == MYSQL_TYPE_TIMESTAMP) {
+        if (l_item->data_type() == MYSQL_TYPE_TIMESTAMP) {
           types::RCDateTime::AdjustTimezone(dt);
         }
         rcde->PutDateTime(dt.GetInt64());
