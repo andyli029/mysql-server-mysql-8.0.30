@@ -174,12 +174,12 @@ void restore_fields(List<Item> &fields, std::map<int, Item *> &items_backup) {
 
 inline static void SetFieldState(Field *field, bool is_null) {
   if (is_null) {
-    if (field->real_maybe_null())
+    if (field->is_nullable())
       field->set_null();
     else  // not nullable, but null needed because of outer join
       field->table->null_row = 1;
   } else {
-    if (field->real_maybe_null())
+    if (field->is_nullable())
       field->set_notnull();
     else  // not nullable, but null needed because of outer join
       field->table->null_row = 0;
@@ -197,8 +197,8 @@ ResultSender::ResultSender(THD *thd, Query_result *res, List<Item> &fields)
       rows_sent(0) {}
 
 void ResultSender::Init([[maybe_unused]] TempTable *t) {
-  thd->proc_info = "Sending data";
-  DBUG_PRINT("info", ("%s", thd->proc_info));
+  thd->set_proc_info("Sending data");
+  DBUG_PRINT("info", ("%s", thd->proc_info()));
   res->send_result_set_metadata(fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
 
   thd->lex->unit->offset_limit_cnt = 0;
@@ -374,7 +374,7 @@ void ResultSender::Finalize(TempTable *result_table) {
   if (result_table && !result_table->IsSent()) Send(result_table);
   CleanUp();
   SendEof();
-  ulonglong cost_time = (thd->current_utime() - thd->start_utime) / 1000;
+  ulonglong cost_time = (my_micro_time() - thd->start_utime) / 1000;
   auto &sctx = thd->m_main_security_ctx;
   if (rc_querylog_.isOn())
     rc_querylog_ << system::lock << "\tClientIp:" << (sctx.ip().length ? sctx.ip().str : "unkownn")
@@ -451,8 +451,8 @@ AttributeTypeInfo create_ati(THD *&thd, TABLE &tmp_table, Item *&item) {
 }
 
 void ResultExportSender::Init(TempTable *t) {
-  thd->proc_info = "Exporting data";
-  DBUG_PRINT("info", ("%s", thd->proc_info));
+  thd->set_proc_info("Exporting data");
+  DBUG_PRINT("info", ("%s", thd->proc_info()));
   DEBUG_ASSERT(t);
 
   thd->lex->unit->offset_limit_cnt = 0;
