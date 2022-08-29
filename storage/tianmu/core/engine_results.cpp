@@ -289,7 +289,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
         // if buf_lens[col_id] is 0 means that f->ptr was not assigned
         // because it was assigned for this instance of object
         if (buf_lens[col_id] != 0) {
-          bitmap_set_bit(f->table->write_set, f->field_index);
+          bitmap_set_bit(f->table->write_set, f->field_index());
           auto is_null = Engine::ConvertToField(f, rcdt, NULL);
           SetFieldState(f, is_null);
         }
@@ -299,7 +299,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
         ifield = (Item_field *)(*iref->ref);
         f = ifield->get_result_field();
         if (buf_lens[col_id] != 0) {
-          bitmap_set_bit(f->table->write_set, f->field_index);
+          bitmap_set_bit(f->table->write_set, f->field_index());
           auto is_null = Engine::ConvertToField(f, rcdt, NULL);
           SetFieldState(f, is_null);
         }
@@ -353,7 +353,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
     }  // end switch
     col_id++;
   }  // end while
-  res->send_data(fields);
+  res->send_data(thd, fields);
 }
 
 void ResultSender::Send(TempTable *t) {
@@ -387,7 +387,7 @@ void ResultSender::Finalize(TempTable *result_table) {
 
 void ResultSender::CleanUp() { restore_fields(fields, items_backup); }
 
-void ResultSender::SendEof() { res->send_eof(); }
+void ResultSender::SendEof() { res->send_eof(thd); }
 
 ResultSender::~ResultSender() { delete[] buf_lens; }
 
@@ -406,11 +406,11 @@ void ResultExportSender::SendEof() {
 void init_field_scan_helpers(THD *&thd, TABLE &tmp_table, TABLE_SHARE &share) {
   tmp_table.alias = 0;
   tmp_table.s = &share;
-  init_tmp_table_share(thd, &share, "", 0, "", "");
+  init_tmp_table_share(thd, &share, "", 0, "", "", nullptr);
 
   tmp_table.s->db_create_options = 0;
   tmp_table.s->db_low_byte_first = false; /* or true */
-  tmp_table.null_row = tmp_table.maybe_null = 0;
+  tmp_table.null_row = 0; // stonedb8 TABLE::maybe_null is deleted, and not use it
 }
 
 fields_t::value_type guest_field_type(THD *&thd, TABLE &tmp_table, Item *&item) {
