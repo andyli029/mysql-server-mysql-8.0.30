@@ -3246,7 +3246,7 @@ class Item : public Parse_tree_node {
   */
   Item *next_free;
 
- protected:
+ public: //stonedb8  protected to public
   /// str_values's main purpose is to cache the value in save_in_field
   String str_value;
 

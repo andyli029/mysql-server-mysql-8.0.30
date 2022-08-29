@@ -51,6 +51,7 @@
 #include "mysql_com.h"
 //#include "probes_mysql.h" // stonedb8 deleted by MySQL 8.0
 // stonedb8 start
+#include "sql/protocol.h"
 #include "sql/sql_locale.h"
 #include "sql/derror.h"
 #include "mysql/plugin.h"

@@ -570,8 +570,8 @@ namespace {
 bool generic_item_same(Item const &l_, Item const &r_) {
   return ((&l_ == &r_) || ((l_.type() == r_.type()) && (l_.result_type() == r_.result_type()) &&
                            (l_.cast_to_int_type() == r_.cast_to_int_type()) &&
-                           (l_.string_field_type() == r_.string_field_type()) && (l_.data_type() == r_.data_type()) &&
-                           (l_.const_during_execution() == r_.const_during_execution()) && (l_ == r_)));
+                           (l_.string_field_type(l_.max_length) == r_.string_field_type(l_.max_length)) && (l_.data_type() == r_.data_type()) &&
+                           (l_.const_for_execution() == r_.const_for_execution()) && (l_ == r_)));
 }
 }  // namespace
 
@@ -617,7 +617,7 @@ bool operator==(Item const &l_, Item const &r_) {
             const Item_date_add_interval *l = static_cast<const Item_date_add_interval *>(&l_);
             const Item_date_add_interval *r = static_cast<const Item_date_add_interval *>(&r_);
             same = same && dynamic_cast<const Item_date_add_interval *>(&r_);
-            same = same && ((l->int_type == r->int_type) && (l->date_sub_interval == r->date_sub_interval));
+            same = same && ((l->get_interval_type() == r->get_interval_type()) && (l->is_subtract() == r->is_subtract()));
           }
           if (l->functype() == Item_func::IN_FUNC) {
             const Item_func_in *l = static_cast<const Item_func_in *>(&l_);
