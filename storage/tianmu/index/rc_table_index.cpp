@@ -57,7 +57,7 @@ void create_rdbkey(TABLE *table, uint i, std::shared_ptr<RdbKey> &new_key_def, r
         unsigned_flag = false;
         break;
     }
-    vcols.emplace_back(ColAttr{key_info->key_part[n].field->field_index, f->type(), unsigned_flag});
+    vcols.emplace_back(ColAttr{key_info->key_part[n].field->field_index(), f->type(), unsigned_flag});
   }
 
   const char *const key_name = table->key_info[i].name;
@@ -109,7 +109,7 @@ RCTableIndex::RCTableIndex(const std::string &name, TABLE *table) {
   rdbkey_ = tbl_->m_rdbkeys[pk_index(table, tbl_)];
   // compatible version that primary key make up of one part
   if (table->key_info[keyid_].actual_key_parts == 1)
-    cols_.push_back(table->key_info[keyid_].key_part[0].field->field_index);
+    cols_.push_back(table->key_info[keyid_].key_part[0].field->field_index());
   else
     rdbkey_->get_key_cols(cols_);
   enable_ = true;

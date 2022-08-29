@@ -296,7 +296,7 @@ inline bool has_dup_key(std::shared_ptr<index::RCTableIndex> &indextab, TABLE *t
   KEY *key = table->key_info + table->s->primary_key;
 
   for (uint i = 0; i < key->actual_key_parts; i++) {
-    uint col = key->key_part[i].field->field_index;
+    uint col = key->key_part[i].field->field_index();
     Field *f = table->field[col];
     switch (f->type()) {
       case MYSQL_TYPE_TINY:
