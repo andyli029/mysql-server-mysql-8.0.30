@@ -199,7 +199,8 @@ ResultSender::ResultSender(THD *thd, Query_result *res, List<Item> &fields)
 void ResultSender::Init([[maybe_unused]] TempTable *t) {
   thd->set_proc_info("Sending data");
   DBUG_PRINT("info", ("%s", thd->proc_info()));
-  res->send_result_set_metadata(fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
+  // stonedb8 TODO: fields need convert List<Item> to mem_root_deque<Item *>
+  //res->send_result_set_metadata(thd, fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
 
   thd->lex->unit->offset_limit_cnt = 0;
   thd->current_found_rows = 0;
@@ -353,7 +354,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
     }  // end switch
     col_id++;
   }  // end while
-  res->send_data(thd, fields);
+  //res->send_data(thd, fields);  // stonedb8 TODO: fields need convert List<Item> to mem_root_deque<Item *>
 }
 
 void ResultSender::Send(TempTable *t) {
@@ -461,7 +462,8 @@ void ResultExportSender::Init(TempTable *t) {
 
   common::TIANMUError tianmu_error;
 
-  export_res->send_result_set_metadata(fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
+  // stonedb8 TODO: fields need convert List<Item> to mem_root_deque<Item *>
+  //export_res->send_result_set_metadata(thd, fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
 
   if ((tianmu_error = Engine::GetIOP(iop, *thd, *export_res->SqlExchange(), 0, NULL, true)) != common::ErrorCode::SUCCESS)
     throw common::Exception("Unable to get IOP");

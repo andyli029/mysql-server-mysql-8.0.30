@@ -1133,7 +1133,7 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
         // error/////
     }
     List<Item> tmp_list;  // dummy
-    // stonedb TODO: need to analyse
+    // stonedb8 TODO: need to analyse
     /*
     if (mysql_load(thd, &ex, &tl, tmp_list, tmp_list, tmp_list, DUP_ERROR, false)) {
         thd->is_slave_error = 1;
@@ -1491,7 +1491,7 @@ common::TIANMUError Engine::RunLoader(THD *thd, sql_exchange *ex, TABLE_LIST *ta
 
     // We must invalidate the table in query cache before binlog writing and
     // ha_autocommit_...
-    //query_cache.invalidate(thd, table_list, 0);  // stonedb 8 TODO: query_cache is deleted by MySQL8
+    //query_cache.invalidate(thd, table_list, 0);  // stonedb8 TODO: query_cache is deleted by MySQL8
 
     COPY_INFO::Statistics stats;
     stats.records = ha_rows(tab->NoRecordsLoaded());

@@ -190,10 +190,10 @@ bool Item_tianmufield::get_time(MYSQL_TIME *ltime) {
   return ivalue->get_time(ltime);
 }
 
-bool Item_tianmufield::get_timeval(struct timeval *tm, int *warnings) {
+bool Item_tianmufield::get_timeval(struct my_timeval *tm, int *warnings) {
   MYSQL_TIME ltime;
   if (get_time(&ltime)) return true;
-  if (datetime_to_timeval(current_thd, &ltime, tm, warnings)) return true;
+  if (datetime_to_timeval(&ltime, *current_thd->time_zone(), tm, warnings)) return true;
   return false;
 }
 
