@@ -113,7 +113,10 @@ int Engine::HandleSelect(THD *thd, LEX *lex, Query_result *&result, ulong setup_
   Query_block *save_current_select = lex->current_query_block();
   List<Query_expression> derived_optimized;  // collection to remember derived
                                                // tables that are optimized
-  if (thd->fill_derived_tables() && lex->derived_tables) {
+  // stonedb8 TODO
+  // if (thd->fill_derived_tables() && lex->derived_tables)
+  if (0)
+  {
     // Derived tables are processed completely in the function
     // open_and_lock_tables(...). To avoid execution of derived tables in
     // open_and_lock_tables(...) the function mysql_derived_filling(..)
@@ -421,15 +424,17 @@ int Engine::Execute(THD *thd, LEX *lex, Query_result *result_output, Query_expre
         my_message(ER_UNKNOWN_ERROR, "Tianmu: unsupported UNION", MYF(0));
         throw ReturnMeToMySQLWithError();
       }
-      if (export_file_name)
-        sender.reset(new ResultExportSender(thd, result_output, unit_for_union->item_list)); // stonedb8
-      else
-        sender.reset(new ResultSender(thd, result_output, unit_for_union->item_list)); // stonedb8
-    } else {
-      if (export_file_name)
-        sender.reset(new ResultExportSender(thd, result_output, selects_list->item_list)); // stonedb8
-      else
-        sender.reset(new ResultSender(thd, result_output, selects_list->item_list)); // stonedb8
+      // stonedb8 start TODO
+//      if (export_file_name)
+//        reset(new ResultExportSender(thd, result_output, unit_for_union->item_list));
+//      else
+//        sender.reset(new ResultSender(thd, result_output, unit_for_union->item_list));
+//    } else {
+//      if (export_file_name)
+//        sender.reset(new ResultExportSender(thd, result_output, selects_list->item_list));
+//      else
+//        sender.reset(new ResultSender(thd, result_output, selects_list->item_list));
+      // stonedb8 end
     }
 
     TempTable *result = query.Preexecute(cqu, sender.get());
@@ -576,7 +581,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
                 // When using braces, SQL_CALC_FOUND_ROWS affects the whole query:
                 // we don't calculate found_rows() per union part.
                 // Otherwise, SQL_CALC_FOUND_ROWS should be done on all sub parts.
-                sl->join->select_options = (select_limit_cnt == HA_POS_ERROR || sl->braces)
+                sl->join->select_options = (select_limit_cnt == HA_POS_ERROR /*|| sl->braces*/) // stonedb8 TODO
                                                ? sl->active_options() & ~OPTION_FOUND_ROWS
                                                : sl->active_options() | found_rows_for_union;
                 saved_error = sl->join->optimize(1);
