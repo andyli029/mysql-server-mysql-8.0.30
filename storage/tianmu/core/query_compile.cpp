@@ -114,7 +114,7 @@ int Query::FieldUnmysterify(Item *item, const char *&database_name, const char *
       ifield = dynamic_cast<Item_tianmufield *>(item)->OriginalItem();
       if (IsAggregationItem(ifield)) {
         Item_sum *is = (Item_sum *)ifield;
-        if (is->get_arg_count() > 1) return RETURN_QUERY_TO_MYSQL_ROUTE;
+        if (is->arg_count > 1) return RETURN_QUERY_TO_MYSQL_ROUTE;
         Item *tmp_item = UnRef(is->get_arg(0));
         if (tmp_item->type() == Item::FIELD_ITEM)
           ifield = (Item_field *)tmp_item;
@@ -131,7 +131,7 @@ int Query::FieldUnmysterify(Item *item, const char *&database_name, const char *
 
     case Item::SUM_FUNC_ITEM: {  // min(k), max(k), count(), avg(k), sum
       Item_sum *is = (Item_sum *)item;
-      if (is->get_arg_count() > 1) {
+      if (is->arg_count > 1) {
         return RETURN_QUERY_TO_MYSQL_ROUTE;
       }
       Item *tmp_item = UnRef(is->get_arg(0));
@@ -206,7 +206,7 @@ bool Query::FieldUnmysterify(Item *item, TabID &tab, AttrID &col) {
     ifield = dynamic_cast<Item_tianmufield *>(item)->OriginalItem();
     if (IsAggregationItem(ifield)) {
       Item_sum *is = (Item_sum *)ifield;
-      if (is->get_arg_count() > 1) return RETURN_QUERY_TO_MYSQL_ROUTE;
+      if (is->arg_count > 1) return RETURN_QUERY_TO_MYSQL_ROUTE;
       Item *tmp_item = UnRef(is->get_arg(0));
       if (tmp_item->type() == Item::FIELD_ITEM)
         ifield = (Item_field *)tmp_item;
@@ -223,7 +223,7 @@ bool Query::FieldUnmysterify(Item *item, TabID &tab, AttrID &col) {
   } else if (item->type() == Item::SUM_FUNC_ITEM) {  // min(k), max(k), count(), avg(k), sum(),
                                                      // group_concat()
     Item_sum *is = (Item_sum *)item;
-    if (is->get_arg_count() > 1) {
+    if (is->arg_count > 1) {
       int dir = 0;
       if (((Item_sum *)item)->sum_func() == Item_sum::GROUP_CONCAT_FUNC) {
         dir = ((Item_func_group_concat *)item)->direction();
@@ -231,7 +231,7 @@ bool Query::FieldUnmysterify(Item *item, TabID &tab, AttrID &col) {
 
       // only pass 1 group 1 order by case, which is the only case Tianmu
       // supported
-      if (dir == 0 || is->get_arg_count() != 2) return false;
+      if (dir == 0 || is->arg_count != 2) return false;
     }
     Item *tmp_item = UnRef(is->get_arg(0));
     if (tmp_item->type() == Item::FIELD_ITEM)
@@ -435,7 +435,7 @@ int Query::AddFields(List<Item> &fields, TabID const &tmp_table, bool const grou
     else if (IsAggregationItem(item)) {
       // select AGGREGATION over EXPRESSION
       Item_sum *item_sum = (Item_sum *)item;
-      if (item_sum->get_arg_count() > 1 || HasAggregation(item_sum->get_arg(0))) return RETURN_QUERY_TO_MYSQL_ROUTE;
+      if (item_sum->arg_count > 1 || HasAggregation(item_sum->get_arg(0))) return RETURN_QUERY_TO_MYSQL_ROUTE;
       if (IsCountStar(item_sum)) {  // count(*) doesn't need any virtual column
         AttrID at;
         cq->AddColumn(at, tmp_table, CQTerm(), oper, item_sum->item_name.ptr(), false);
@@ -485,7 +485,7 @@ int Query::AddFields(List<Item> &fields, TabID const &tmp_table, bool const grou
 
 int Query::AddGroupByFields(ORDER *group_by, const TabID &tmp_table) {
   for (; group_by; group_by = group_by->next) {
-    if (group_by->direction != ORDER::ORDER_ASC) {
+    if (group_by->direction != ORDER_ASC) {
       my_message(ER_SYNTAX_ERROR,
                  "Tianmu specific error: Using DESC after GROUP BY clause not "
                  "allowed. Use "
@@ -540,7 +540,7 @@ int Query::AddOrderByFields(ORDER *order_by, TabID const &tmp_table, int const g
         cq->CreateVirtualColumn(vc.second, tmp_table, tmp_table, AttrID(col_num));
         phys2virt.insert(std::make_pair(std::make_pair(tmp_table.n, -col_num - 1), vc));
       }
-      cq->Add_Order(tmp_table, AttrID(vc.second), (order_by->direction != ORDER::ORDER_ASC));
+      cq->Add_Order(tmp_table, AttrID(vc.second), (order_by->direction != ORDER_ASC));
       continue;
     }
     if (group_by_clause) {
@@ -563,7 +563,7 @@ int Query::AddOrderByFields(ORDER *order_by, TabID const &tmp_table, int const g
           cq->CreateVirtualColumn(vc.second, tmp_table, tmp_table, AttrID(col_num));
           phys2virt.insert(std::make_pair(std::make_pair(tmp_table.n, -col_num - 1), vc));
         }
-        cq->Add_Order(tmp_table, AttrID(vc.second), (order_by->direction != ORDER::ORDER_ASC));
+        cq->Add_Order(tmp_table, AttrID(vc.second), (order_by->direction != ORDER_ASC));
         continue;
         // we can reuse transformation done in case of HAVING
         // result = Item2CQTerm(item, my_term, tmp_table, CondType::HAVING_COND);
@@ -589,7 +589,7 @@ int Query::AddOrderByFields(ORDER *order_by, TabID const &tmp_table, int const g
       vc.second = my_term.vc_id;
     }
     if (result != RCBASE_QUERY_ROUTE) return RETURN_QUERY_TO_MYSQL_ROUTE;
-    cq->Add_Order(tmp_table, AttrID(vc.second), order_by->direction != ORDER::ORDER_ASC);
+    cq->Add_Order(tmp_table, AttrID(vc.second), order_by->direction != ORDER_ASC);
   }
   return RCBASE_QUERY_ROUTE;
 }
@@ -627,7 +627,7 @@ int Query::AddGlobalOrderByFields(SQL_I_List<ORDER> *global_order, const TabID &
     int attr;
     cq->CreateVirtualColumn(attr, tmp_table, tmp_table, AttrID(col_num));
     phys2virt.insert(std::make_pair(std::make_pair(tmp_table.n, col_num), std::make_pair(tmp_table.n, attr)));
-    cq->Add_Order(tmp_table, AttrID(attr), order_by->direction != ORDER::ORDER_ASC);
+    cq->Add_Order(tmp_table, AttrID(attr), order_by->direction != ORDER_ASC);
   }
 
   return RCBASE_QUERY_ROUTE;
@@ -649,7 +649,7 @@ Query::WrapStatus Query::WrapMysqlExpression(Item *item, const TabID &tmp_table,
       if (IsAggregationItem(it)) {
         // a few checkings for aggregations
         Item_sum *aggregation = (Item_sum *)it;
-        if (aggregation->get_arg_count() > 1) return WrapStatus::FAILURE;
+        if (aggregation->arg_count > 1) return WrapStatus::FAILURE;
         if (IsCountStar(aggregation))  // count(*) doesn't need any virtual column
           return WrapStatus::FAILURE;
       }
@@ -680,7 +680,7 @@ Query::WrapStatus Query::WrapMysqlExpression(Item *item, const TabID &tmp_table,
     for (auto &it : ifields) {
       if (IsAggregationItem(it)) {
         Item_sum *aggregation = (Item_sum *)it;
-        if (aggregation->get_arg_count() > 1) return WrapStatus::FAILURE;
+        if (aggregation->arg_count > 1) return WrapStatus::FAILURE;
 
         if (IsCountStar(aggregation)) {  // count(*) doesn't need any virtual column
           at.n = GetAddColumnId(AttrID(common::NULL_VALUE_32), tmp_table, common::ColOperation::COUNT, false);
