@@ -4181,6 +4181,7 @@ class Item_field : public Item_ident {
   void set_result_field(Field *field_arg) override { result_field = field_arg; }
   Field *get_tmp_table_field() override { return result_field; }
   Field *tmp_table_field(TABLE *) override { return result_field; }
+  Field *get_result_field() const override { return result_field; } // stonedb8 add
   void set_base_item_field(const Item_field *item) {
     m_base_item_field =
         item->base_item_field() != nullptr ? item->base_item_field() : item;

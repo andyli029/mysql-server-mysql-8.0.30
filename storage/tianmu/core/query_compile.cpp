@@ -183,7 +183,7 @@ int Query::FieldUnmysterify(Item *item, const char *&database_name, const char *
    * in a simpler way than currently.
    */
 
-  Field *f = ifield->result_field;
+  Field *f = ifield->get_result_field();
 
   ASSERT_MYSQL_STRING(f->table->s->db);
   ASSERT_MYSQL_STRING(f->table->s->table_name);
@@ -273,15 +273,15 @@ bool Query::FieldUnmysterify(Item *item, TabID &tab, AttrID &col) {
       // Physical table in FROM - RCTable
       int field_num;
       for (field_num = 0; mysql_table->field[field_num]; field_num++)
-        if (mysql_table->field[field_num]->field_name == ifield->result_field->field_name) break;
+        if (mysql_table->field[field_num]->field_name == ifield->get_result_field()->field_name) break;
       if (!mysql_table->field[field_num]) continue;
       col = AttrID(field_num);
       return true;
     } else {
       // subselect in FROM - TempTable
-      if (field_alias2num.find(TabIDColAlias(tab.n, ifield->result_field->field_name)) == field_alias2num.end())
+      if (field_alias2num.find(TabIDColAlias(tab.n, ifield->get_result_field()->field_name)) == field_alias2num.end())
         continue;
-      col.n = field_alias2num[TabIDColAlias(tab.n, ifield->result_field->field_name)];
+      col.n = field_alias2num[TabIDColAlias(tab.n, ifield->get_result_field()->field_name)];
       return true;
     }
   }
