@@ -398,7 +398,7 @@ void Query::ExtractOperatorType(Item *&conds, common::Operator &op, bool &negati
       break;
     case Item_func::LIKE_FUNC:
       op = is_there_not ? common::Operator::O_NOT_LIKE : common::Operator::O_LIKE;
-      like_esc = ((Item_func_like *)cond_func)->escape;
+      like_esc = ((Item_func_like *)cond_func)->escape();
       break;
     case Item_func::ISNULL_FUNC:
       op = common::Operator::O_IS_NULL;
@@ -907,7 +907,7 @@ int Query::Item2CQTerm(Item *an_arg, CQTerm &term, const TabID &tmp_table, CondT
     if (dynamic_cast<Item_maxmin_subselect *>(item_subs) != NULL ||
         dynamic_cast<Item_in_subselect *>(item_subs) != NULL)
       ignore_limit = true;
-    st_select_lex_unit *select_unit = item_subs->unit;
+    Query_expression *select_unit = item_subs->unit;
 
     // needs to check if we can relay on subquery transformation to min/max
     bool ignore_minmax = (dynamic_cast<Item_maxmin_subselect *>(item_subs) == NULL &&
@@ -922,7 +922,7 @@ int Query::Item2CQTerm(Item *an_arg, CQTerm &term, const TabID &tmp_table, CondT
     // they are not needed any longer and stay with aliases of outer query only
     auto outer_map_copy = table_alias2index_ptr;
     TabID subselect;
-    int res = Compile(cq, select_unit->first_select(), select_unit->union_distinct, &subselect, ignore_limit,
+    int res = Compile(cq, select_unit->first_query_block(), select_unit->union_distinct, &subselect, ignore_limit,
                       left_expr_for_subselect, oper_for_subselect, ignore_minmax, true);
     // restore outer query aliases
     table_alias2index_ptr = outer_map_copy;
@@ -1106,19 +1106,22 @@ int Query::Item2CQTerm(Item *an_arg, CQTerm &term, const TabID &tmp_table, CondT
 
 CondID Query::ConditionNumberFromMultipleEquality(Item_equal *conds, const TabID &tmp_table, CondType filter_type,
                                                   CondID *and_me_filter, bool is_or_subtree) {
-  Item_equal_iterator li(*conds);
-
   CQTerm zero_term, first_term, next_term;
-  Item_field *ifield;
+  // stonedb8 start
+  List_STL_Iterator<Item_field> ifield;
+  List_STL_Iterator<Item_field> li;
+  li = conds->get_fields().begin();
+  // stonedb8 end
+
   Item *const_item = conds->get_const();
   if (const_item) {
     if (!Item2CQTerm(const_item, zero_term, tmp_table, filter_type)) return CondID(-1);
   } else {
     ifield = li++;
-    if (!Item2CQTerm(ifield, zero_term, tmp_table, filter_type)) return CondID(-1);
+    if (!Item2CQTerm(&*ifield, zero_term, tmp_table, filter_type)) return CondID(-1); // stonedb8 TODO
   }
   ifield = li++;
-  if (!Item2CQTerm(ifield, first_term, tmp_table, filter_type)) return CondID(-1);
+  if (!Item2CQTerm(&*ifield, first_term, tmp_table, filter_type)) return CondID(-1); // stonedb8 TODO
   CondID filter;
   if (!and_me_filter)
     cq->CreateConds(filter, tmp_table, first_term, common::Operator::O_EQ, zero_term, CQTerm(),
@@ -1129,8 +1132,8 @@ CondID Query::ConditionNumberFromMultipleEquality(Item_equal *conds, const TabID
     else
       cq->And(*and_me_filter, tmp_table, first_term, common::Operator::O_EQ, zero_term);
   }
-  while ((ifield = li++) != nullptr) {
-    if (!Item2CQTerm(ifield, next_term, tmp_table, filter_type)) return CondID(-1);
+  while ((ifield = li++) != conds->get_fields().end()) {  // stonedb8
+    if (!Item2CQTerm(&*ifield, next_term, tmp_table, filter_type)) return CondID(-1); // stonedb8 TODO
     if (!and_me_filter) {
       if (is_or_subtree)
         cq->Or(filter, tmp_table, next_term, common::Operator::O_EQ, zero_term);
@@ -1672,7 +1675,7 @@ bool Query::ClearSubselectTransformation(common::Operator &oper_for_subselect, I
   // expression with subselect
   Item *left_ref = ((Item_func *)cond_removed)->arguments()[0];
   if (dynamic_cast<Item_int_with_ref *>(left_ref) != NULL) left_ref = ((Item_int_with_ref *)left_ref)->real_item();
-  if (left_ref->type() != Item::REF_ITEM || ((Item_ref *)left_ref)->ref_type() != Item_ref::DIRECT_REF ||
+  if (left_ref->type() != Item::REF_ITEM || /*((Item_ref *)left_ref)->ref_type() != Item_ref::DIRECT_REF ||*/ // stonedb8 DIRECT_REF is deleted
       ((Item_ref *)left_ref)->real_item() != left_expr_for_subselect)
     return false;
   // set the operation type
@@ -1759,10 +1762,9 @@ int Query::PrefixCheck(Item *conds) {
           break;
         }
         case Item_func::MULT_EQUAL_FUNC: {
-          Item_equal_iterator li(*(Item_equal *)conds);
-          Item_field *ifield;
-          while ((ifield = li++) != nullptr) {
-            int ret = PrefixCheck(ifield);
+          // stonedb8
+          for (Item &ifield : (*(Item_equal *)conds).get_fields()) {
+            int ret = PrefixCheck(&ifield);
             if (!ret) return RETURN_QUERY_TO_MYSQL_ROUTE;
             if (ret == TABLE_YET_UNSEEN_INVOLVED) return TABLE_YET_UNSEEN_INVOLVED;
           }
