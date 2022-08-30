@@ -940,7 +940,7 @@ class Query_expression {
   bool optimize(THD *thd, TABLE *materialize_destination, bool create_iterators,
                 bool finalize_access_paths);
 
-  //TIANMU UPGRADE END
+  //TIANMU UPGRADE BEGIN
   int optimize_for_tianmu(THD *thd);
   int optimize_after_tianmu(THD *thd);
   //END
