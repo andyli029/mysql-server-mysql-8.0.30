@@ -415,7 +415,7 @@ int Engine::Execute(THD *thd, LEX *lex, Query_result *result_output, Query_expre
       rct = current_txn_->GetTableByPathIfExists(table_path);
     }
     if (unit_for_union != NULL && !unit_for_union->is_prepared()) {
-      int res = result_output->prepare(unit_for_union->item_list, unit_for_union);
+      int res = result_output->prepare(thd, unit_for_union->item_list, unit_for_union); // stonedb8 add thd
       if (res) {
         TIANMU_LOG(LogCtl_Level::ERROR, "Error: Unsupported UNION");
         my_message(ER_UNKNOWN_ERROR, "Tianmu: unsupported UNION", MYF(0));
@@ -556,7 +556,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
                 JOIN *join = new JOIN(thd, sl);
                 if (!join) {
                     thd->lex->set_current_query_block(lex_select_save);
-                    cleanup(0);
+                    cleanup(thd, 0); // stonedb8
                     return true;
                 }
                 sl->set_join(join);
@@ -564,7 +564,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
             if (is_optimized())
                 sl->join->reset();
             else {
-                set_limit(sl);
+                set_limit(thd, sl); // stonedb8
                 if (sl == global_parameters() || thd->lex->is_explain()) {
                     offset_limit_cnt = 0;
                     // We can't use LIMIT at this stage if we are using ORDER BY for the
@@ -590,10 +590,10 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
         }
     }
     /* code from st_select_lex_unit::exec*/
-    if (!saved_error && !thd->is_fatal_error) {
+    if (!saved_error && !thd->is_fatal_error()) {
         /* Send result to 'result' */
         saved_error = true;
-        set_limit(global_parameters());
+        set_limit(thd, global_parameters()); // stonedb8 add thd
         if (fake_query_block != NULL) 
 		{
             thd->lex->set_current_query_block(fake_query_block);
@@ -616,7 +616,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
                 //                                global_parameters->order_list.first, NULL, NULL, fake_query_block,
                 //                                this); //STONEDB UPGRADE
                 if(!is_prepared()) {
-                  if (fake_query_block->prepare(thd))
+                  if (fake_query_block->prepare(thd, nullptr)) // stonedb8 add nullptr from m8
                       return saved_error;
                 }
             } else {
@@ -624,7 +624,7 @@ int Query_expression::optimize_for_tianmu(THD *thd) {
                 join->reset();
             }
 
-            fake_query_block->table_list.empty();
+            fake_query_block->table_list.clear();
         }
        
     }
@@ -643,7 +643,7 @@ int Query_expression::optimize_after_tianmu(THD *thd)
             JOIN *join = new JOIN(thd, sl);
             if (!join) {
                 thd->lex->set_current_query_block(lex_select_save);
-                cleanup(0);
+                cleanup(thd, 0);  // stonedb8
                 return true;
             }
             sl->set_join(join);
@@ -658,7 +658,7 @@ int Query_expression::optimize_after_tianmu(THD *thd)
         // fake_query_block->join must be cleaned up before returning to
         // MySQL route, otherwise sub select + union would coredump.
         thd->lex->set_current_query_block(fake_query_block);
-        fake_query_block->cleanup(0);
+        fake_query_block->cleanup(thd, 0); // stonedb8
     }
     executed = 0;
     thd->lex->set_current_query_block(lex_select_save);
