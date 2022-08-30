@@ -530,8 +530,8 @@ const char *Query::GetTableName(Item_field *ifield)
             table_name = ifield->cached_table->referencing_view->table_name;
         else
             table_name = ifield->cached_table->table_name;
-    else if (ifield->result_field && ifield->result_field->table && ifield->result_field->table->s->table_category != TABLE_CATEGORY_TEMPORARY)
-        table_name = ifield->result_field->table->s->table_name.str;
+    else if (ifield->get_result_field() && ifield->get_result_field()->table && ifield->get_result_field()->table->s->table_category != TABLE_CATEGORY_TEMPORARY)
+        table_name = ifield->get_result_field()->table->s->table_name.str;
     return table_name;
 }
 
