@@ -641,7 +641,8 @@ class Query_expression {
   Query_block *master;
   /// The first query block in this query expression.
   Query_block *slave;
-
+  ulonglong found_rows_for_union; //TIANMU UPGRADE
+  bool saved_error;  //TIANMU UPGRADE
  private:
   /**
     Marker for subqueries in WHERE, HAVING, ORDER BY, GROUP BY and
