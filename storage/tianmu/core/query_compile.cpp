@@ -338,7 +338,7 @@ int Query::AddJoins(List<TABLE_LIST> &join, TabID &tmp_table, std::vector<TabID>
       const char *table_path = 0;
       TabID tab(0);
       if (join_ptr->is_view_or_derived()) {
-        if (!Compile(cq, join_ptr->derived_unit()->first_select(), join_ptr->derived_unit()->union_distinct, &tab))
+        if (!Compile(cq, join_ptr->derived_query_expression()->first_query_block(), join_ptr->derived_query_expression()->union_distinct, &tab))
           return RETURN_QUERY_TO_MYSQL_ROUTE;
         table_alias = join_ptr->alias;
       } else {
@@ -919,12 +919,12 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
   CompiledQuery *saved_cq = cq;
   cq = compiled_query;
 
-  if ((selects_list->join)&&(selects_list != selects_list->join->unit->global_parameters())) {  // only in case of unions this is set
-    SetLimit(selects_list->join->unit->global_parameters(), 0, global_offset_value, (int64_t &)global_limit_value);
-    global_order = &(selects_list->join->unit->global_parameters()->order_list);
+  if ((selects_list->join)&&(selects_list != selects_list->join->query_expression()->global_parameters())) {  // only in case of unions this is set
+    SetLimit(selects_list->join->query_expression()->global_parameters(), 0, global_offset_value, (int64_t &)global_limit_value);
+    global_order = &(selects_list->join->query_expression()->global_parameters()->order_list);
   }
 
-  for (Query_block *sl = selects_list; sl; sl = sl->next_select()) {
+  for (Query_block *sl = selects_list; sl; sl = sl->next_query_block()) {
     int64_t limit_value = -1;
     int64_t offset_value = -1;
 
@@ -938,14 +938,14 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
             if (!join) {
 
                 sl->cleanup(0);
-                return TRUE;
+                return true;
             }
             sl->set_join(join);
         }
         
         if (!JudgeErrors(sl))
             return RETURN_QUERY_TO_MYSQL_ROUTE;
-        SetLimit(sl, sl == selects_list ? 0 : sl->join->unit->global_parameters(), offset_value, limit_value);
+        SetLimit(sl, sl == selects_list ? 0 : sl->join->query_expression()->global_parameters(), offset_value, limit_value);
 
         List<Item> *fields = &sl->fields_list;
         Item *      conds = sl->where_cond();
@@ -1061,6 +1061,10 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
   return RCBASE_QUERY_ROUTE;
 }
 
+// stonedb8 start  #define is deleted TODO
+#define JOIN_TYPE_LEFT	1
+#define JOIN_TYPE_RIGHT	2
+// stonedb8 end
 JoinType Query::GetJoinTypeAndCheckExpr(uint outer_join, Item *on_expr) {
   if (outer_join) ASSERT(on_expr != 0, "on_expr shouldn't be null when outer_join != 0");
 
