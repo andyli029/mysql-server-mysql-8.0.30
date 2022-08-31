@@ -160,10 +160,13 @@ TianmuHandler::TianmuHandler(handlerton *hton, TABLE_SHARE *table_arg) : handler
   ref_length = sizeof(uint64_t);
 }
 
+// stonedb8
+/*
 const char **TianmuHandler::bas_ext() const {
   static const char *ha_rcbase_exts[] = {common::TIANMU_EXT, 0};
   return ha_rcbase_exts;
 }
+*/
 
 namespace {
 std::vector<bool> GetAttrsUseIndicator(TABLE *table) {
@@ -550,7 +553,7 @@ int TianmuHandler::delete_all_rows() {
   DBUG_RETURN(HA_ERR_WRONG_COMMAND);
 }
 
-int TianmuHandler::rename_table(const char *from, const char *to) {
+int TianmuHandler::rename_table(const char *from, const char *to, const dd::Table *from_table_def, dd::Table *to_table_def) {   // stonedb8 TODO
   try {
     ha_rcengine_->RenameTable(current_txn_, from, to, ha_thd());
     return 0;
@@ -666,7 +669,7 @@ bool tianmu_check_status([[maybe_unused]] void *param) { return 0; }
  Called from handler.cc by handler::ha_open(). The server opens all tables by
  calling ha_open() which then calls the handler specific open().
  */
-int TianmuHandler::open(const char *name, [[maybe_unused]] int mode, [[maybe_unused]] uint test_if_locked) {
+int TianmuHandler::open(const char *name, [[maybe_unused]] int mode, [[maybe_unused]] uint test_if_locked, [[maybe_unused]] const dd::Table *table_def) { // stonedb8 TODO
   DBUG_ENTER(__PRETTY_FUNCTION__);
 
   m_table_name = name;
@@ -1120,7 +1123,7 @@ int TianmuHandler::start_stmt(THD *thd, thr_lock_type lock_type) {
  If current thread is in non-autocommit, we don't permit any mysql query
  caching.
  */
-// stonedb8
+// stonedb8 TODO
 bool TianmuHandler::register_query_cache_table(THD *thd, char *table_key, size_t key_length,
                                                    qc_engine_callback *call_back,
                                                    [[maybe_unused]] ulonglong *engine_data) {
@@ -1142,7 +1145,7 @@ bool TianmuHandler::register_query_cache_table(THD *thd, char *table_key, size_t
  during create if the table_flag HA_DROP_BEFORE_CREATE was specified for
  the storage engine.
  */
-int TianmuHandler::delete_table(const char *name) {
+int TianmuHandler::delete_table(const char *name, const dd::Table *table_def) { // stonedb8 TODO
   DBUG_ENTER(__PRETTY_FUNCTION__);
   int ret = 1;
   try {
@@ -1180,9 +1183,9 @@ ha_rows TianmuHandler::records_in_range([[maybe_unused]] uint inx, [[maybe_unuse
  point if you wish to change the table definition, but there are no methods
  currently provided for doing that.
 
- Called from handle.cc by ha_create_table().
+ Called from handle.cc by ha_create_table(). 
  */
-int TianmuHandler::create(const char *name, TABLE *table_arg, [[maybe_unused]] HA_CREATE_INFO *create_info) {
+int TianmuHandler::create(const char *name, TABLE *table_arg, [[maybe_unused]] HA_CREATE_INFO *info, dd::Table *table_def) { // stonedb8 TODO
   DBUG_ENTER(__PRETTY_FUNCTION__);
   try {
     ha_rcengine_->CreateTable(name, table_arg);
@@ -1205,7 +1208,7 @@ int TianmuHandler::create(const char *name, TABLE *table_arg, [[maybe_unused]] H
   DBUG_RETURN(1);
 }
 
-int TianmuHandler::truncate() {
+int TianmuHandler::truncate(dd::Table *table_def) { // stonedb8 TODO
   int ret = 0;
   try {
     ha_rcengine_->TruncateTable(m_table_name, ha_thd());
@@ -1447,7 +1450,8 @@ enum_alter_inplace_result TianmuHandler::check_if_supported_inplace_alter([[mayb
   return HA_ALTER_INPLACE_EXCLUSIVE_LOCK;
 }
 
-bool TianmuHandler::inplace_alter_table(TABLE *altered_table, Alter_inplace_info *ha_alter_info) {
+bool TianmuHandler::inplace_alter_table(TABLE *altered_table [[maybe_unused]], Alter_inplace_info *ha_alter_info [[maybe_unused]],
+                                   const dd::Table *old_table_def [[maybe_unused]], dd::Table *new_table_def [[maybe_unused]]) {  // stonedb8 TODO
   try {
     if (!(ha_alter_info->handler_flags & ~TIANMU_SUPPORTED_ALTER_ADD_DROP_ORDER)) {
       std::vector<Field *> v_old(table_share->field, table_share->field + table_share->fields);
@@ -1468,8 +1472,9 @@ bool TianmuHandler::inplace_alter_table(TABLE *altered_table, Alter_inplace_info
   return true;
 }
 
-bool TianmuHandler::commit_inplace_alter_table([[maybe_unused]] TABLE *altered_table,
-                                                Alter_inplace_info *ha_alter_info, bool commit) {
+bool TianmuHandler::commit_inplace_alter_table(TABLE *altered_table [[maybe_unused]], Alter_inplace_info *ha_alter_info [[maybe_unused]],
+                                          bool commit [[maybe_unused]], const dd::Table *old_table_def [[maybe_unused]],
+                                          dd::Table *new_table_def [[maybe_unused]]) {  // stonedb8 TODO
   if (!commit) {
     TIANMU_LOG(LogCtl_Level::INFO, "Alter table failed : %s%s", m_table_name.c_str(), " rollback");
     return true;
