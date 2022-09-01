@@ -934,19 +934,24 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
     int64_t offset_value = -1;
 
 		
-        if (!sl->join) 
-		
+    if (!sl->join)
 		{
-            sl->add_active_options(SELECT_NO_UNLOCK);
-            JOIN *join = new JOIN(sl->master_query_expression()->thd, sl);
-                    
-            if (!join) {
-
-                sl->cleanup(0);
-                return true;
-            }
-            sl->set_join(join);
-        }
+      TIANMU_LOG(LogCtl_Level::DEBUG, "sl->join is nil!!!!");
+// stonedb8 start
+//            sl->add_active_options(SELECT_NO_UNLOCK);
+//            // stonedb8
+//            //JOIN *join = new JOIN(sl->master_unit()->thd, sl);
+//            //JOIN *join = new JOIN(sl->master_query_expression()->thd, sl);
+//            JOIN *join = new JOIN(sl->join->thd, sl);
+//
+//            if (!join) {
+//
+//                sl->cleanup(join->thd, 0); // stonedb8
+//                return true;
+//            }
+//            sl->set_join(join);
+// stonedb8 end
+		}
         
         if (!JudgeErrors(sl))
             return RETURN_QUERY_TO_MYSQL_ROUTE;
@@ -1039,7 +1044,7 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
       // called recursively)
       cq = saved_cq;
       if (cond_to_reinsert && list_to_reinsert) list_to_reinsert->push_back(cond_to_reinsert);
-	  sl->cleanup(0);
+	  //sl->cleanup(thd, 0); // stonedb8
       return RETURN_QUERY_TO_MYSQL_ROUTE;
     }
 
@@ -1057,7 +1062,7 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
       cq->Union(prev_result, prev_result, tmp_table, union_all);
     if (sl == last_distinct) union_all = true;
     if (cond_to_reinsert && list_to_reinsert) list_to_reinsert->push_back(cond_to_reinsert);
-	sl->cleanup(0);
+	//sl->cleanup(thd, 0); // stonedb8
   }
 
   cq->BuildTableIDStepsMap();
