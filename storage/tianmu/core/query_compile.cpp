@@ -288,27 +288,32 @@ bool Query::FieldUnmysterify(Item *item, TabID &tab, AttrID &col) {
   return false;
 }
 
-int Query::AddJoins(List<TABLE_LIST> &join, TabID &tmp_table, std::vector<TabID> &left_tables,
+// stonedb8 start fix List<Item> to mem_root_deque<Item *> #49 TODO
+int Query::AddJoins(mem_root_deque<TABLE_LIST *> join, /*List<TABLE_LIST> &join,*/ TabID &tmp_table, std::vector<TabID> &left_tables,
                     std::vector<TabID> &right_tables, bool in_subquery, bool &first_table /*= true*/,
                     bool for_subq_in_where /*false*/) {
   // on first call first_table = true. It indicates if it is the first table to
   // be added is_left is true iff it is nested left join which needs to be
   // flatten (all tables regardless of their join type need to be left-joined)
-  TABLE_LIST *join_ptr;
-  List_iterator<TABLE_LIST> li(join);
-  std::vector<TABLE_LIST *> reversed;
+// stonedb8 start
+//  TABLE_LIST *join_ptr;
+//  List_iterator<TABLE_LIST> li(join);
+//  std::vector<TABLE_LIST *> reversed;
+// stonedb8 end
 
-  if (!join.elements)
+  if (join.empty()) // stonedb8
     return RETURN_QUERY_TO_MYSQL_ROUTE;  // no tables in table list in this
                                          // select
   // if the table list was empty altogether, we wouldn't even enter
   // Compilation(...) it must be sth. like `select 1 from t1 union select 2` and
   // we are in the second select in the union
-
-  while ((join_ptr = li++) != nullptr) reversed.push_back(join_ptr);
-  size_t size = reversed.size();
-  for (unsigned int i = 0; i < size; i++) {
-    join_ptr = reversed[size - i - 1];
+// stonedb8 start
+//while ((join_ptr = li++) != nullptr) reversed.push_back(join_ptr);
+//size_t size = reversed.size();
+//  for (unsigned int i = 0; i < size; i++) {
+    for (TABLE_LIST *join_ptr : join) {
+    //join_ptr = reversed[size - i - 1];
+// stonedb8 end
     if (join_ptr->nested_join) {
       std::vector<TabID> local_left, local_right;
       if (!AddJoins(join_ptr->nested_join->join_list, tmp_table, local_left, local_right, in_subquery, first_table,
@@ -933,7 +938,7 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
 		
 		{
             sl->add_active_options(SELECT_NO_UNLOCK);
-            JOIN *join = new JOIN(sl->master_unit()->thd, sl);
+            JOIN *join = new JOIN(sl->master_query_expression()->thd, sl);
                     
             if (!join) {
 
@@ -947,7 +952,9 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
             return RETURN_QUERY_TO_MYSQL_ROUTE;
         SetLimit(sl, sl == selects_list ? 0 : sl->join->query_expression()->global_parameters(), offset_value, limit_value);
 
-        List<Item> *fields = &sl->fields_list;
+        // stonedb8
+        //List<Item> *fields = &sl->fields_list;
+        //mem_root_deque<Item *> *fields = sl->get_fields_list();
         Item *      conds = sl->where_cond();
         ORDER *     order = sl->order_list.first;
 
@@ -958,7 +965,8 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
 
         ORDER *           group = sl->group_list.first;
         Item *            having = sl->having_cond();
-        List<TABLE_LIST> *join_list = sl->join_list;
+        // stonedb8 start fix List<Item> to mem_root_deque<Item *> #49 TODO
+        //List<TABLE_LIST> *join_list = sl->join_list;
         bool              zero_result = sl->join->zero_result_cause != NULL;
 
     Item *field_for_subselect;
@@ -970,7 +978,7 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
       // partial optimization of LOJ conditions, JOIN::optimize(part=3)
       // necessary due to already done basic transformation of conditions
       // see comments in sql_select.cc:JOIN::optimize()
-      if (IsLOJ(join_list)) sl->join->optimize(3);
+      if (IsLOJNew(sl->join_list)) sl->join->optimize(3);
 
       if (left_expr_for_subselect)
         if (!ClearSubselectTransformation(*oper_for_subselect, field_for_subselect, conds, having, cond_to_reinsert,
@@ -994,16 +1002,22 @@ int Query::Compile(CompiledQuery *compiled_query, Query_block *selects_list, Que
       }
       std::vector<TabID> left_tables, right_tables;
       bool first_table = true;
-      if (!AddJoins(*join_list, tmp_table, left_tables, right_tables, (res_tab != NULL && res_tab->n != 0), first_table,
+      // stonedb8
+      if (!AddJoins(*sl->join_list, tmp_table, left_tables, right_tables, (res_tab != NULL && res_tab->n != 0), first_table,
                     for_subq_in_where))
         throw CompilationError();
 
+      // stonedb8 start
+      List<Item> *fields = nullptr;
       List<Item> field_list_for_subselect;
+      //mem_root_deque<Item *> field_list_for_subselect;
       if (left_expr_for_subselect && field_for_subselect) {
         field_list_for_subselect.push_back(field_for_subselect);
         fields = &field_list_for_subselect;
       }
+      // stonedb8 end
       bool aggr_used = false;
+      // stonedb8
       if (!AddFields(*fields, tmp_table, group != NULL, col_count, ignore_minmax, aggr_used)) throw CompilationError();
 
       if (!AddGroupByFields(group, tmp_table)) throw CompilationError();
@@ -1091,5 +1105,15 @@ bool Query::IsLOJ(List<TABLE_LIST> *join) {
   }
   return false;
 }
+
+// stonedb8 start fix List<Item> to mem_root_deque<Item *> #49 TODO
+bool Query::IsLOJNew(mem_root_deque<TABLE_LIST *> *join) {
+  for (TABLE_LIST *join_ptr : *join) {
+    JoinType join_type = GetJoinTypeAndCheckExpr(join_ptr->outer_join, join_ptr->join_cond());
+    if (join_ptr->join_cond() && (join_type == JoinType::JO_LEFT || join_type == JoinType::JO_RIGHT)) return true;
+  }
+  return false;
+}
+
 }  // namespace core
 }  // namespace Tianmu
