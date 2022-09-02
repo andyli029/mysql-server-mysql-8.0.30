@@ -48,7 +48,8 @@ class TianmuHandler final : public handler {
    handler.h
    */
   ulonglong table_flags() const override {
-    return HA_NON_KEY_AUTO_INC | HA_REC_NOT_IN_SEQ | HA_PARTIAL_COLUMN_READ | HA_BINLOG_STMT_CAPABLE |
+    // stonedb8 HA_REC_NOT_IN_SEQ is deleted
+    return HA_NON_KEY_AUTO_INC | /*HA_REC_NOT_IN_SEQ |*/ HA_PARTIAL_COLUMN_READ | HA_BINLOG_STMT_CAPABLE |
            HA_BLOCK_CONST_TABLE | HA_PRIMARY_KEY_REQUIRED_FOR_POSITION | HA_NULL_IN_KEY | HA_DUPLICATE_POS |
            HA_PRIMARY_KEY_IN_READ_INDEX;
   }
