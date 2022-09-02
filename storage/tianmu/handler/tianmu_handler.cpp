@@ -57,8 +57,8 @@ const Alter_inplace_info::HA_ALTER_FLAGS TianmuHandler::TIANMU_SUPPORTED_ALTER_C
 bool rcbase_query_caching_of_table_permitted(THD *thd, [[maybe_unused]] char *full_name,
                                                 [[maybe_unused]] uint full_name_len,
                                                 [[maybe_unused]] ulonglong *unused) {
-  if (!thd_test_options(thd, (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) return ((bool)TRUE);
-  return ((bool)FALSE);
+  if (!thd_test_options(thd, (OPTION_NOT_AUTOCOMMIT | OPTION_BEGIN))) return ((bool)true);
+  return ((bool)false);
 }
 
 
@@ -1307,7 +1307,7 @@ bool TianmuHandler::explain_message(const Item *a_cond, String *buf) {
     std::string str = current_txn_->GetExplainMsg();
     buf->append(str.c_str(), str.length());
   }
-  DBUG_RETURN(TRUE);
+  DBUG_RETURN(true);
 }
 
 int TianmuHandler::set_cond_iter() {

@@ -789,7 +789,7 @@ int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
   auto pa = fs::path(iop.GetTableName());
   std::tie(db_name, tab_name) = std::make_tuple(pa.parent_path().filename().native(), pa.filename().native());
   append_identifier(thd, &string_buf, tab_name.c_str(), tab_name.length());
-  Load_log_event lle(thd, ex, db_name.c_str(), string_buf.c_ptr_safe(), fv, FALSE, DUP_ERROR, FALSE, TRUE);
+  Load_log_event lle(thd, ex, db_name.c_str(), string_buf.c_ptr_safe(), fv, false, DUP_ERROR, false, true);
   if (thd->lex->local_file) lle.set_fname_outside_temp_buf(ex->file_name, std::strlen(ex->file_name));
 
     if (!thd->lex->load_field_list.elements) {
@@ -849,14 +849,14 @@ int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
 
   if (!(load_data_query = (char *)thd->alloc(lle.get_query_buffer_length() + 1 + pl))) return -1;
 
-  lle.print_query(FALSE, ex->cs ? ex->cs->csname : NULL, load_data_query, &end, &fname_start, &fname_end);
+  lle.print_query(false, ex->cs ? ex->cs->csname : NULL, load_data_query, &end, &fname_start, &fname_end);
 
   std::strcpy(end, p);
   end += pl;
 
     Execute_load_query_log_event e(
         thd, load_data_query, end - load_data_query, static_cast<uint>(fname_start - load_data_query - 1),
-        static_cast<uint>(fname_end - load_data_query), (binary_log::enum_load_dup_handling)0, TRUE, FALSE, FALSE, 0);
+        static_cast<uint>(fname_end - load_data_query), (binary_log::enum_load_dup_handling)0, true, false, false, 0);
     return mysql_bin_log.write_event(&e);
 }
 
@@ -930,7 +930,7 @@ int RCTable::binlog_insert2load_log_event(system::IOParameters &iop) {
 
   std::memcpy(load_data_query, p, pl);
   Execute_load_query_log_event e(thd, load_data_query, pl, static_cast<uint>(fname_start_pos - 1),
-                                 static_cast<uint>(fname_end_pos), (binary_log::enum_load_dup_handling)0, TRUE, FALSE, FALSE, 0);
+                                 static_cast<uint>(fname_end_pos), (binary_log::enum_load_dup_handling)0, true, false, false, 0);
   return mysql_bin_log.write_event(&e);
 }
 
