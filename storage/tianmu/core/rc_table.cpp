@@ -771,6 +771,8 @@ uint64_t RCTable::ProceedNormal(system::IOParameters &iop) {
   return no_loaded_rows;
 }
 
+// stonedb8 start TODO
+/*
 int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
   char *load_data_query, *end, *fname_start, *fname_end, *p = NULL;
   size_t pl = 0;
@@ -859,6 +861,11 @@ int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
         static_cast<uint>(fname_end - load_data_query), (binary_log::enum_load_dup_handling)0, true, false, false, 0);
     return mysql_bin_log.write_event(&e);
 }
+*/
+int RCTable::binlog_load_query_log_event(system::IOParameters &iop) {
+    return 0;
+}
+// stonedb8 end
 
 size_t RCTable::max_row_length(std::vector<loader::ValueCache> &vcs, uint row, uint delimiter) {
   size_t row_len = 0;
@@ -1091,7 +1098,8 @@ int RCTable::binlog_insert2load_block(std::vector<loader::ValueCache> &vcs, uint
   buffer = block_buf.get();
   for (block_len = (uint)(ptr - block_buf.get()); block_len > 0;
        buffer += std::min(block_len, max_event_size), block_len -= std::min(block_len, max_event_size)) {
-    if (lf_info->wrote_create_file) {
+    // stonedb8 start wrote_create_file->logged_data_file from struct LOAD_FILE_INFO
+    if (lf_info->logged_data_file) {
       Append_block_log_event a(lf_info->thd, lf_info->thd->db().str, buffer, std::min(block_len, max_event_size),
                                lf_info->log_delayed);
       if (mysql_bin_log.write_event(&a)) return -1;
@@ -1099,7 +1107,8 @@ int RCTable::binlog_insert2load_block(std::vector<loader::ValueCache> &vcs, uint
       Begin_load_query_log_event b(lf_info->thd, lf_info->thd->db().str, buffer, std::min(block_len, max_event_size),
                                    lf_info->log_delayed);
       if (mysql_bin_log.write_event(&b)) return -1;
-      lf_info->wrote_create_file = 1;
+      lf_info->logged_data_file = 1;
+    // stonedb8 end
     }
   }
 
