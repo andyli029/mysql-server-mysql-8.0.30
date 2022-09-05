@@ -19,7 +19,7 @@
 
 // Variables to show config through mysql 'show variables' command
 bool tianmu_sysvar_pushdown;
-char tianmu_sysvar_refresh_sys_table;
+bool tianmu_sysvar_refresh_sys_table;
 bool tianmu_sysvar_usemysqlimportexportdefaults;
 char *tianmu_sysvar_cachefolder;
 char *tianmu_sysvar_hugefiledir;

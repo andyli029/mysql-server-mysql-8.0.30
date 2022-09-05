@@ -15,6 +15,7 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1335 USA
 */
 #include <arpa/inet.h>
+#include <netdb.h>  // stonedb8 for gethostbyname()
 
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
@@ -27,7 +28,7 @@
 
 handlerton *rcbase_hton;
 
-struct st_mysql_sys_var {
+struct SYS_VAR {
   MYSQL_PLUGIN_VAR_HEADER;
 };
 
@@ -62,7 +63,7 @@ static int rcbase_done_func([[maybe_unused]] void *p) {
   DBUG_RETURN(0);
 }
 
-handler *rcbase_create_handler(handlerton *hton, TABLE_SHARE *table, MEM_ROOT *mem_root) {
+handler *rcbase_create_handler(handlerton *hton, TABLE_SHARE *table, bool partitioned, MEM_ROOT *mem_root) {  // stonedb8 TODO
   return new (mem_root) TianmuHandler(hton, table);
 }
 
@@ -121,7 +122,7 @@ int rcbase_commit([[maybe_unused]] handlerton *hton, THD *thd, bool all) {
   int ret = 1;
   std::string error_message;
 
-  if (!(thd->no_errors != 0 || thd->killed || thd->transaction_rollback_request)) {
+  if (!( /*thd->no_errors != 0 || */ thd->killed || thd->transaction_rollback_request)) { // stonedb8 TODO: no_errors is deleted
     try {
       ha_rcengine_->CommitTx(thd, all);
       ret = 0;
@@ -221,7 +222,7 @@ int rcbase_init_func(void *p) {
     ha_kvstore_ = new index::KVStore();
     ha_kvstore_->Init();
     ha_rcengine_ = new core::Engine();
-    ret = ha_rcengine_->Init(total_ha);
+    ret = ha_rcengine_->Init(rcbase_hton->slot);  // stonedb8
     {
       TIANMU_LOG(LogCtl_Level::INFO,
                   "\n"
@@ -297,21 +298,21 @@ int get_LoadPerMinute_StatusVar([[maybe_unused]] MYSQL_THD thd, SHOW_VAR *outvar
   return 0;
 }
 
-int get_Freeable_StatusVar([[maybe_unused]] MYSQL_THD thd, struct st_mysql_show_var *outvar, char *tmp) {
+int get_Freeable_StatusVar([[maybe_unused]] MYSQL_THD thd, struct SHOW_VAR *outvar, char *tmp) {
   *((int64_t *)tmp) = mm::TraceableObject::GetFreeableSize();
   outvar->value = tmp;
   outvar->type = SHOW_LONGLONG;
   return 0;
 }
 
-int get_UnFreeable_StatusVar([[maybe_unused]] MYSQL_THD thd, struct st_mysql_show_var *outvar, char *tmp) {
+int get_UnFreeable_StatusVar([[maybe_unused]] MYSQL_THD thd, struct SHOW_VAR *outvar, char *tmp) {
   *((int64_t *)tmp) = mm::TraceableObject::GetUnFreeableSize();
   outvar->value = tmp;
   outvar->type = SHOW_LONGLONG;
   return 0;
 }
 
-int get_MemoryScale_StatusVar([[maybe_unused]] MYSQL_THD thd, struct st_mysql_show_var *outvar, char *tmp) {
+int get_MemoryScale_StatusVar([[maybe_unused]] MYSQL_THD thd, struct SHOW_VAR *outvar, char *tmp) {
   *((int64_t *)tmp) = mm::TraceableObject::MemorySettingsScale();
   outvar->value = tmp;
   outvar->type = SHOW_LONGLONG;
@@ -377,7 +378,7 @@ SHOW_VAR tianmu_masterslave_dump[] = {{"info", masteslave_info, SHOW_CHAR, SHOW_
 //  SHOW_LONGLONG, SHOW_CHAR, SHOW_CHAR_PTR,
 //  SHOW_ARRAY, SHOW_FUNC, SHOW_DOUBLE
 
-int tianmu_throw_error_func([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var,
+int tianmu_throw_error_func([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var,
                              [[maybe_unused]] void *save, struct st_mysql_value *value) {
   int buffer_length = 512;
   char buff[512] = {0};
@@ -388,7 +389,7 @@ int tianmu_throw_error_func([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] str
   return -1;
 }
 
-static void update_func_str([[maybe_unused]] THD *thd, struct st_mysql_sys_var *var, void *tgt, const void *save) {
+static void update_func_str([[maybe_unused]] THD *thd, struct SYS_VAR *var, void *tgt, const void *save) {
   char *old = *(char **)tgt;
   *(char **)tgt = *(char **)save;
   if (var->flags & PLUGIN_VAR_MEMALLOC) {
@@ -397,19 +398,19 @@ static void update_func_str([[maybe_unused]] THD *thd, struct st_mysql_sys_var *
   }
 }
 
-void refresh_sys_table_func([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, void *tgt,
+void refresh_sys_table_func([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var, void *tgt,
                             const void *save) {
   *(bool *)tgt = *(bool *)save ? true : false;
 }
 
-void debug_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void *var_ptr, const void *save);
-void trace_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void *var_ptr, const void *save);
-void controlquerylog_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void *var_ptr, const void *save);
-void start_async_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void *var_ptr, const void *save);
-extern void async_join_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void *var_ptr, const void *save);
+void debug_update(MYSQL_THD thd, struct SYS_VAR *var, void *var_ptr, const void *save);
+void trace_update(MYSQL_THD thd, struct SYS_VAR *var, void *var_ptr, const void *save);
+void controlquerylog_update(MYSQL_THD thd, struct SYS_VAR *var, void *var_ptr, const void *save);
+void start_async_update(MYSQL_THD thd, struct SYS_VAR *var, void *var_ptr, const void *save);
+extern void async_join_update(MYSQL_THD thd, struct SYS_VAR *var, void *var_ptr, const void *save);
 
 #define STATUS_FUNCTION(name, showtype, member)                                                             \
-  int get_##name##_StatusVar([[maybe_unused]] MYSQL_THD thd, struct st_mysql_show_var *outvar, char *tmp) { \
+  int get_##name##_StatusVar([[maybe_unused]] MYSQL_THD thd, struct SHOW_VAR *outvar, char *tmp) { \
     *((int64_t *)tmp) = ha_rcengine_->cache.member();                                                              \
     outvar->value = tmp;                                                                                    \
     outvar->type = showtype;                                                                                \
@@ -417,7 +418,7 @@ extern void async_join_update(MYSQL_THD thd, struct st_mysql_sys_var *var, void 
   }
 
 #define MM_STATUS_FUNCTION(name, showtype, member)                                                          \
-  int get_##name##_StatusVar([[maybe_unused]] MYSQL_THD thd, struct st_mysql_show_var *outvar, char *tmp) { \
+  int get_##name##_StatusVar([[maybe_unused]] MYSQL_THD thd, struct SHOW_VAR *outvar, char *tmp) { \
     *((int64_t *)tmp) = mm::TraceableObject::Instance()->member();                                          \
     outvar->value = tmp;                                                                                    \
     outvar->type = showtype;                                                                                \
@@ -458,7 +459,7 @@ MM_STATUS_FUNCTION(mmreloaded, SHOW_LONGLONG, getReloaded)
 MM_STATUS_FUNCTION(mmreleasecount, SHOW_LONGLONG, getReleaseCount)
 MM_STATUS_FUNCTION(mmreleasetotal, SHOW_LONGLONG, getReleaseTotal)
 
-static struct st_mysql_show_var statusvars[] = {
+static struct SHOW_VAR statusvars[] = {
     STATUS_MEMBER(gdchits, gdc_hits),
     STATUS_MEMBER(gdcmisses, gdc_misses),
     STATUS_MEMBER(gdcreleased, gdc_released),
@@ -618,7 +619,7 @@ static MYSQL_SYSVAR_UINT(result_sender_rows, tianmu_sysvar_result_sender_rows, P
                          "queries like select xxx from yyya",
                          NULL, NULL, 65536, 1024, 131072, 0);
 
-void debug_update(MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, void *var_ptr, const void *save) {
+void debug_update(MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var, void *var_ptr, const void *save) {
   if (ha_rcengine_) {
     auto cur_conn = ha_rcengine_->GetTx(thd);
     // set debug_level for connection level
@@ -627,7 +628,7 @@ void debug_update(MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, 
   *((int *)var_ptr) = *((int *)save);
 }
 
-void trace_update(MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, void *var_ptr, const void *save) {
+void trace_update(MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var, void *var_ptr, const void *save) {
   *((int *)var_ptr) = *((int *)save);
   // get global mysql_sysvar_control_trace
   tianmu_sysvar_controltrace = THDVAR(nullptr, control_trace);
@@ -638,7 +639,7 @@ void trace_update(MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, 
   }
 }
 
-void controlquerylog_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var,
+void controlquerylog_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var,
                             void *var_ptr, const void *save) {
   *((int *)var_ptr) = *((int *)save);
   int control = *((int *)var_ptr);
@@ -647,7 +648,7 @@ void controlquerylog_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] str
   }
 }
 
-void start_async_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var, void *var_ptr,
+void start_async_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var, void *var_ptr,
                         const void *save) {
   int percent = *((int *)save);
   *((int *)var_ptr) = percent;
@@ -671,7 +672,7 @@ void resolve_async_join_settings(const std::string &settings) {
   }
 }
 
-void async_join_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct st_mysql_sys_var *var,
+void async_join_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct SYS_VAR *var,
                        [[maybe_unused]] void *var_ptr, const void *save) {
   const char *str = *static_cast<const char *const *>(save);
   std::string settings(str);
@@ -748,10 +749,11 @@ mysql_declare_plugin(tianmu){
     "Tianmu storage engine",
     PLUGIN_LICENSE_GPL,
     Tianmu::dbhandler::rcbase_init_func, /* Plugin Init */
+    nullptr,       /* Plugin Check uninstall */
     Tianmu::dbhandler::rcbase_done_func, /* Plugin Deinit */
     0x0001 /* 0.1 */,
     Tianmu::dbhandler::statusvars,   /* status variables  */
     Tianmu::dbhandler::tianmu_showvars, /* system variables  */
-    NULL,                             /* config options    */
+    nullptr,                            /* config options    */
     0                                 /* flags for plugin */
 } mysql_declare_plugin_end;
