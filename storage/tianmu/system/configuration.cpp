@@ -18,9 +18,9 @@
 #include "system/rc_system.h"
 
 // Variables to show config through mysql 'show variables' command
-char tianmu_sysvar_pushdown;
+bool tianmu_sysvar_pushdown;
 char tianmu_sysvar_refresh_sys_table;
-char tianmu_sysvar_usemysqlimportexportdefaults;
+bool tianmu_sysvar_usemysqlimportexportdefaults;
 char *tianmu_sysvar_cachefolder;
 char *tianmu_sysvar_hugefiledir;
 char *tianmu_sysvar_mm_policy;
@@ -67,11 +67,11 @@ bool tianmu_sysvar_parallel_mapjoin;
 bool tianmu_sysvar_qps_log;
 unsigned int tianmu_sysvar_lookup_max_size;
 unsigned long tianmu_sysvar_dist_policy;
-char tianmu_sysvar_force_hashjoin;
+bool tianmu_sysvar_force_hashjoin;
 int tianmu_sysvar_start_async;
 char *tianmu_sysvar_async_join;
-char tianmu_sysvar_join_disable_switch_side;
-char tianmu_sysvar_enable_histogram_cmap_bloom;
+bool tianmu_sysvar_join_disable_switch_side;
+bool tianmu_sysvar_enable_histogram_cmap_bloom;
 unsigned int tianmu_sysvar_result_sender_rows;
 
 async_join_setting tianmu_sysvar_async_join_setting;

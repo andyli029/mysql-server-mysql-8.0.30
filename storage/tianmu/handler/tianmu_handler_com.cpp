@@ -678,7 +678,8 @@ void async_join_update([[maybe_unused]] MYSQL_THD thd, [[maybe_unused]] struct s
   resolve_async_join_settings(settings);
 }
 
-static struct st_mysql_sys_var *tianmu_showvars[] = {MYSQL_SYSVAR(bg_load_threads),
+// stonedb8
+static struct SYS_VAR *tianmu_showvars[] = {MYSQL_SYSVAR(bg_load_threads),
                                                   MYSQL_SYSVAR(cachinglevel),
                                                   MYSQL_SYSVAR(compensation_start),
                                                   MYSQL_SYSVAR(control_trace),
