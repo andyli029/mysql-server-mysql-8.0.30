@@ -956,7 +956,7 @@ class Item_sum_num : public Item_sum {
       : Item_sum(pos, list, w), is_evaluated(false) {}
 
   //TIANMU UPGRADE
-  Item_sum_num() :Item_sum(),is_evaluated(FALSE) {}
+  Item_sum_num() :Item_sum(),is_evaluated(false) {}
   //END
 
   Item_sum_num(THD *thd, Item_sum_num *item)
