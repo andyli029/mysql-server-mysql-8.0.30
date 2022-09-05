@@ -479,7 +479,7 @@ int TianmuHandler::update_row(const uchar *old_data, uchar *new_data) {
         continue;
       }
       auto field = table->field[i];
-      if (field->real_maybe_null()) {
+      if (field->is_nullable()) {
         if (field->is_null_in_record(old_data) && field->is_null_in_record(new_data)) {
           continue;
         }
@@ -1000,9 +1000,9 @@ int TianmuHandler::rnd_next(uchar *buf) {
 
   int ret = HA_ERR_END_OF_FILE;
   try {
-    table->status = 0;
+    table->set_found_row(); // stonedb8
     if (fill_row(buf) == HA_ERR_END_OF_FILE) {
-      table->status = STATUS_NOT_FOUND;
+      table->set_no_row(); // stonedb8
       DBUG_RETURN(ret);
     }
     ret = 0;
@@ -1063,10 +1063,10 @@ int TianmuHandler::rnd_pos(uchar *buf, uchar *pos) {
     table_ptr = tab_ptr.get();
 
     table_new_iter.MoveToRow(position);
-    table->status = 0;
+    table->set_found_row(); // stonedb8
     blob_buffers.resize(table->s->fields);
     if (fill_row(buf) == HA_ERR_END_OF_FILE) {
-      table->status = STATUS_NOT_FOUND;
+      table->set_no_row(); // stonedb8
       DBUG_RETURN(ret);
     }
     ret = 0;
@@ -1091,10 +1091,13 @@ int TianmuHandler::extra(enum ha_extra_function operation) {
   /* This preemptive delete might cause problems here.
    * Other place where it can be put is TianmuHandler::external_lock().
    */
+  // stonedb8 TODO: HA_EXTRA_NO_CACHE is deleted
+  /* 
   if (operation == HA_EXTRA_NO_CACHE) {
     m_cq.reset();
     m_query.reset();
   }
+  */
   DBUG_RETURN(0);
 }
 
@@ -1123,13 +1126,15 @@ int TianmuHandler::start_stmt(THD *thd, thr_lock_type lock_type) {
  If current thread is in non-autocommit, we don't permit any mysql query
  caching.
  */
-// stonedb8 TODO
+// stonedb8 TODO: register_query_cache_table is deleted
+/*
 bool TianmuHandler::register_query_cache_table(THD *thd, char *table_key, size_t key_length,
                                                    qc_engine_callback *call_back,
                                                    [[maybe_unused]] ulonglong *engine_data) {
   *call_back = rcbase_query_caching_of_table_permitted;
   return rcbase_query_caching_of_table_permitted(thd, table_key, key_length, 0);
 }
+*/
 
 /*
  Used to delete a table. By the time delete_table() has been called all
