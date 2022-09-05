@@ -519,6 +519,15 @@ class Item_sum : public Item_func {
     mark_as_sum_func();
   }
 
+  // stonedb8 TODO
+  //TIANMU UPGRADE
+  Item_sum() : m_window(nullptr), allow_group_via_temp_table(true)
+  {
+    mark_as_sum_func();
+    //init_aggregator();
+  }
+  //END
+
   Item_sum(const POS &pos, Item *a, PT_window *w)
       : Item_func(pos, a), m_window(w), allow_group_via_temp_table(true) {}
 
@@ -945,6 +954,10 @@ class Item_sum_num : public Item_sum {
 
   Item_sum_num(const POS &pos, PT_item_list *list, PT_window *w)
       : Item_sum(pos, list, w), is_evaluated(false) {}
+
+  //TIANMU UPGRADE
+  Item_sum_num() :Item_sum(),is_evaluated(FALSE) {}
+  //END
 
   Item_sum_num(THD *thd, Item_sum_num *item)
       : Item_sum(thd, item), is_evaluated(item->is_evaluated) {}
