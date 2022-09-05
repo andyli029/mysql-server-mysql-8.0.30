@@ -1842,9 +1842,11 @@ class THD : public MDL_context_owner,
   /**@}*/
   // NOTE: Ideally those two should be in Protocol,
   // but currently its design doesn't allow that.
-  NET net;        // client connection descriptor
+  // NET net;        // client connection descriptor
   String packet;  // dynamic buffer for network I/O
  public:
+  // TIANMU UPGRADE
+  NET net;        // client connection descriptor
   void set_skip_readonly_check() { skip_readonly_check = true; }
 
   bool is_cmd_skip_readonly() const { return skip_readonly_check; }
