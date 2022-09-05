@@ -33,7 +33,7 @@ static int String2DateTime(const BString &s, RCDateTime &rcdt, common::CT at) {
     return 1;
   }
 
-  if ((at == common::CT::TIMESTAMP) && !validate_timestamp_range(&myt)) {
+  if ((at == common::CT::TIMESTAMP) && !validate_my_time(myt)) { // stonedb8
     rcdt = RCDateTime(0, common::CT::TIMESTAMP);
     return 0;
   }
