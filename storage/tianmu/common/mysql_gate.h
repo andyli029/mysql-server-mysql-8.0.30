@@ -89,11 +89,6 @@ using fields_t = std::vector<enum_field_types>;
 
 my_time_t tianmu_sec_since_epoch(int year, int mon, int mday, int hour, int min, int sec);
 
-// stonedb8
-const char *ER_THD(const THD *thd, int mysql_errno) {
-  return thd->variables.lc_messages->errmsgs->lookup(mysql_errno);
-}
-
 namespace Tianmu {
 namespace common {
 bool IsTimeStampZero(MYSQL_TIME &t);
