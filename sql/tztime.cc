@@ -1866,3 +1866,9 @@ Time_zone *my_tz_find(THD *thd, const String *name) {
 void Time_zone::adjust_leap_second(MYSQL_TIME *t) {
   if (t->second == 60 || t->second == 61) t->second = 59;
 }
+
+// TIANMU UPGRADE: FIXME
+my_time_t tianmu_sec_since_epoch(int year, int mon, int mday, int hour, int min ,int sec)
+{
+  return sec_since_epoch(year, mon, mday, hour, min ,sec);
+}
