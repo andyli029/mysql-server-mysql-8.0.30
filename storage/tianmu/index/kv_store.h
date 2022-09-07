@@ -21,6 +21,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <condition_variable> // stonedb8 for centos7.9, gcc 11.2.1
 
 #include "common/common_definitions.h"
 #include "index/rdb_meta_manager.h"
