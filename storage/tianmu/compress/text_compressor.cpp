@@ -22,7 +22,7 @@
 
 #include "common/assert.h"
 #include "compress/inc_wgraph.h"
-#include "compress/lz4.h"
+#include "lz4.h"
 #include "system/fet.h"
 
 namespace Tianmu {

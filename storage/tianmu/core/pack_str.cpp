@@ -21,7 +21,7 @@
 #include "zlib.h"
 
 #include "compress/bit_stream_compressor.h"
-#include "compress/lz4.h"
+#include "lz4.h"
 #include "compress/num_compressor.h"
 #include "compress/part_dict.h"
 #include "compress/text_compressor.h"
