@@ -379,6 +379,8 @@ extern handlerton *myisam_hton;
 extern handlerton *heap_hton;
 extern handlerton *temptable_hton;
 extern handlerton *innodb_hton;
+extern handlerton *tianmu_hton; // stonedb8
+
 extern uint opt_server_id_bits;
 extern ulong opt_server_id_mask;
 extern const char *load_default_groups[];
