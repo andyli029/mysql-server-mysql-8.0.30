@@ -91,6 +91,7 @@
 #include "sql/trigger_def.h"
 #include "sql_string.h"
 #include "thr_lock.h"
+#include "../storage/tianmu/handler/ha_rcengine.h" // stonedb8
 
 class READ_INFO;
 
@@ -223,6 +224,15 @@ bool Sql_cmd_load_table::execute_inner(THD *thd,
   ulong skip_lines = m_exchange.skip_lines;
   DBUG_TRACE;
 
+  // TIANMU UPGRADE BEGIN
+  if (mysql_bin_log.is_open())
+  {
+    lf_info.thd = thd;
+    lf_info.logged_data_file = false;
+    lf_info.last_pos_in_file = HA_POS_ERROR;
+    lf_info.log_delayed = true;
+  }
+  // END
   /*
     Bug #34283
     mysqlbinlog leaves tmpfile after termination if binlog contains
@@ -295,6 +305,11 @@ bool Sql_cmd_load_table::execute_inner(THD *thd,
     my_error(ER_UPDATE_TABLE_USED, MYF(0), table_list->table_name);
     return true;
   }
+  // TIANMU UPGRADE BEGIN
+  if (!Tianmu::dbhandler::tianmu_load(thd, &m_exchange, table_list, (void*) &lf_info)) {
+    return false;
+  }
+  // END
 
   TABLE *const table = insert_table_ref->table;
 
