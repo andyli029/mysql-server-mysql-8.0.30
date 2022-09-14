@@ -1133,12 +1133,22 @@ static void HandleDelayedLoad(int tid, std::vector<std::unique_ptr<char[]>> &vec
         // error/////
     }
     List<Item> tmp_list;  // dummy
-    // stonedb8 TODO: need to analyse
+    // stonedb8 start
     /*
     if (mysql_load(thd, &ex, &tl, tmp_list, tmp_list, tmp_list, DUP_ERROR, false)) {
         thd->is_slave_error = 1;
     }
     */
+    thd->lex->query_tables = &tl;
+    LEX_STRING lex_str = {const_cast<char *>(ex.file_name),addr.size()};
+
+    auto cmd = new (thd->mem_root) Sql_cmd_load_table(
+        ex.filetype, false, lex_str, On_duplicate::ERROR, nullptr, nullptr, nullptr, nullptr,
+        ex.field, ex.line, ex.skip_lines, nullptr, nullptr, nullptr, nullptr);
+    if (cmd->execute(thd)) {
+      thd->is_slave_error = 1;
+    }
+    // stonedb8 end
 
     thd->set_catalog({0, 1});//TIANMU UPGRADE
     thd->set_db({NULL,0}); /* will free the current database */
