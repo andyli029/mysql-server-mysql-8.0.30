@@ -25,18 +25,17 @@
 
 namespace Tianmu {
 namespace core {
-void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &items_backup) {
+// stonedb8 List -> mem_root_deque
+void scan_fields(mem_root_deque<Item *> &fields, uint *&buf_lens, std::map<int, Item *> &items_backup) {
   Item *item;
   Field *f;
   Item_field *ifield;
   Item_ref *iref;
   Item_sum *is;
-
   Item::Type item_type;
   Item_sum::Sumfunctype sum_type;
-  List_iterator<Item> li(fields);
 
-  buf_lens = new uint[fields.elements];
+  buf_lens = new uint[CountVisibleFields(fields)]; // stonedb8
   uint item_id = 0;
   uint field_length = 0;
   uint total_length = 0;
@@ -50,7 +49,8 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
   types::Item_sum_sum_rcbase *isum_sum_rcbase;
   types::Item_sum_hybrid_rcbase *isum_hybrid_rcbase;
 
-  while ((item = li++)) {
+  for (auto it = fields.begin(); it != fields.end(); ++it) {  // stonedb8
+    item = *it;
     item_type = item->type();
     buf_lens[item_id] = 0;
     switch (item_type) {
@@ -79,7 +79,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
         tmp->hybrid_field_type_ = item->data_type();
         tmp->collation.set(item->collation);
         tmp->value_.set_charset(item->collation.collation);
-        li.replace(tmp);
+        fields[item_id] = tmp; // stonedb8
         break;
       }
       case Item::SUM_FUNC_ITEM: {
@@ -98,7 +98,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
           isum_hybrid_rcbase->hybrid_field_type_ = is->data_type();
           isum_hybrid_rcbase->collation.set(is->collation);
           isum_hybrid_rcbase->value_.set_charset(is->collation.collation);
-          li.replace(isum_hybrid_rcbase);
+          fields[item_id] = isum_hybrid_rcbase; // stonedb8
           buf_lens[item_id] = 0;
           break;
         } else if (sum_type == Item_sum::COUNT_FUNC || sum_type == Item_sum::COUNT_DISTINCT_FUNC ||
@@ -106,7 +106,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
           isum_int_rcbase = new types::Item_sum_int_rcbase();
           isum_int_rcbase->unsigned_flag = is->unsigned_flag;
           items_backup[item_id] = item;
-          li.replace(isum_int_rcbase);
+          fields[item_id] = isum_int_rcbase; // stonedb8
           buf_lens[item_id] = 0;
           break;
           // we can use the same type for SUM,AVG and SUM DIST, AVG DIST
@@ -120,7 +120,7 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
           isum_sum_rcbase->decimals = is->decimals;
           isum_sum_rcbase->hybrid_type_ = is->result_type();
           isum_sum_rcbase->unsigned_flag = is->unsigned_flag;
-          li.replace(isum_sum_rcbase);
+          fields[item_id] = isum_sum_rcbase; // stonedb8
           buf_lens[item_id] = 0;
           break;
         } else {
@@ -135,9 +135,9 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
   }  // end while
 
   item_id = 0;
-  li.rewind();
 
-  while ((item = li++)) {
+  for (auto it = fields.begin(); it != fields.end(); ++it) {  // stonedb8
+    item = *it;
     item_type = item->type();
     switch (item_type) {
       case Item::FIELD_ITEM:  // regular select
@@ -156,18 +156,19 @@ void scan_fields(List<Item> &fields, uint *&buf_lens, std::map<int, Item *> &ite
   }
 }
 
-void restore_fields(List<Item> &fields, std::map<int, Item *> &items_backup) {
+// stonedb8 List -> mem_root_deque
+void restore_fields(mem_root_deque<Item *> &fields, std::map<int, Item *> &items_backup) {
   // nothing to restore
   if (items_backup.size() == 0) {
     return;
   }
 
   Item *item;
-  List_iterator<Item> li(fields);
-
   int count = 0;
-  while ((item = li++)) {
-    if (items_backup.find(count) != items_backup.end()) li.replace(items_backup[count]);
+  for (auto it = fields.begin(); it != fields.end(); ++it) { // stonedb8
+    item = *it;
+    if (items_backup.find(count) != items_backup.end()) 
+      fields[count] = items_backup[count]; // stonedb8
     count++;
   }
 }
@@ -186,7 +187,8 @@ inline static void SetFieldState(Field *field, bool is_null) {
   }
 }
 
-ResultSender::ResultSender(THD *thd, Query_result *res, List<Item> &fields)
+// stonedb8 List -> mem_root_deque
+ResultSender::ResultSender(THD *thd, Query_result *res, mem_root_deque<Item *> &fields)
     : thd(thd),
       res(res),
       buf_lens(NULL),
@@ -199,9 +201,7 @@ ResultSender::ResultSender(THD *thd, Query_result *res, List<Item> &fields)
 void ResultSender::Init([[maybe_unused]] TempTable *t) {
   thd->set_proc_info("Sending data");
   DBUG_PRINT("info", ("%s", thd->proc_info()));
-  // stonedb8 TODO: fields need convert List<Item> to mem_root_deque<Item *>
-  //res->send_result_set_metadata(thd, fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
-
+  res->send_result_set_metadata(thd, fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
   thd->lex->unit->offset_limit_cnt = 0;
   thd->current_found_rows = 0;
   scan_fields(fields, buf_lens, items_backup);
@@ -277,9 +277,8 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
   uint col_id = 0;
   int64_t value;
 
-  List_iterator_fast<Item> li(fields);
-  li.rewind();
-  while ((item = li++)) {
+  for (auto it = fields.begin(); it != fields.end(); ++it) { // stonedb8
+    item = *it;
     int is_null = 0;
     types::RCDataType &rcdt(*r[col_id]);
     switch (item->type()) {
@@ -354,7 +353,7 @@ void ResultSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataTyp
     }  // end switch
     col_id++;
   }  // end while
-  //res->send_data(thd, fields);  // stonedb8 TODO: fields need convert List<Item> to mem_root_deque<Item *>
+  res->send_data(thd, fields);
 }
 
 void ResultSender::Send(TempTable *t) {
@@ -392,7 +391,8 @@ void ResultSender::SendEof() { res->send_eof(thd); }
 
 ResultSender::~ResultSender() { delete[] buf_lens; }
 
-ResultExportSender::ResultExportSender(THD *thd, Query_result *result, List<Item> &fields)
+// stonedb8 List -> mem_root_deque
+ResultExportSender::ResultExportSender(THD *thd, Query_result *result, mem_root_deque<Item *>  &fields)
     : ResultSender(thd, result, fields) {
   export_res = dynamic_cast<exporter::select_tianmu_export *>(result);
   DEBUG_ASSERT(export_res);
@@ -462,23 +462,22 @@ void ResultExportSender::Init(TempTable *t) {
 
   common::TIANMUError tianmu_error;
 
-  // stonedb8 TODO: fields need convert List<Item> to mem_root_deque<Item *>
-  //export_res->send_result_set_metadata(thd, fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
+  export_res->send_result_set_metadata(thd, fields, Protocol::SEND_NUM_ROWS | Protocol::SEND_EOF);
 
   if ((tianmu_error = Engine::GetIOP(iop, *thd, *export_res->SqlExchange(), 0, NULL, true)) != common::ErrorCode::SUCCESS)
     throw common::Exception("Unable to get IOP");
 
-  List_iterator_fast<Item> li(fields);
   fields_t f;
-  li.rewind();
-  Item *item(NULL);
+  Item *item;
   TABLE tmp_table;  // Used during 'Create_field()'
   TABLE_SHARE share;
   init_field_scan_helpers(thd, tmp_table, share);
 
   std::vector<AttributeTypeInfo> deas = t->GetATIs(iop->GetEDF() != common::EDF::TRI_UNKNOWN);
   int i = 0;
-  while ((item = li++) != nullptr) {
+
+  for (auto it = fields.begin(); it != fields.end(); ++it) { // stonedb8
+    item = *it;
     fields_t::value_type ft = guest_field_type(thd, tmp_table, item);
     f.push_back(ft);
     deas[i] = create_ati(thd, tmp_table, item);
@@ -494,11 +493,10 @@ void ResultExportSender::Init(TempTable *t) {
 
 // send to Exporter
 void ResultExportSender::SendRecord(const std::vector<std::unique_ptr<types::RCDataType>> &r) {
-  List_iterator_fast<Item> li(fields);
   Item *l_item;
-  li.rewind();
   uint o = 0;
-  while ((l_item = li++) != nullptr) {
+  for (auto it = fields.begin(); it != fields.end(); ++it) { // stonedb8
+    l_item = *it;
     types::RCDataType &rcdt(*r[o]);
     if (rcdt.IsNull())
       rcde->PutNull();
