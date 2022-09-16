@@ -257,7 +257,8 @@ class Engine final {
 
 class ResultSender {
  public:
-  ResultSender(THD *thd, Query_result *res, List<Item> &fields);
+  // stonedb8 List -> mem_root_deque
+  ResultSender(THD *thd, Query_result *res, mem_root_deque<Item *> &fields); 
   virtual ~ResultSender();
 
   void Send(TempTable *t);
@@ -280,7 +281,8 @@ class ResultSender {
   Query_result *res;
   std::map<int, Item *> items_backup;
   uint *buf_lens;
-  List<Item> &fields;
+  // stonedb8 List -> mem_root_deque
+  mem_root_deque<Item *> &fields;
   bool is_initialized;
   int64_t *offset;
   int64_t *limit;
@@ -293,7 +295,8 @@ class ResultSender {
 
 class ResultExportSender final : public ResultSender {
  public:
-  ResultExportSender(THD *thd, Query_result *result, List<Item> &fields);
+  // stonedb8 List -> mem_root_deque
+  ResultExportSender(THD *thd, Query_result *result, mem_root_deque<Item *> &fields);
 
   void CleanUp() override {}
   void SendEof() override;

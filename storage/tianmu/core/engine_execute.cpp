@@ -424,16 +424,16 @@ int Engine::Execute(THD *thd, LEX *lex, Query_result *result_output, Query_expre
         my_message(ER_UNKNOWN_ERROR, "Tianmu: unsupported UNION", MYF(0));
         throw ReturnMeToMySQLWithError();
       }
-      // stonedb8 start TODO
-//      if (export_file_name)
-//        reset(new ResultExportSender(thd, result_output, unit_for_union->item_list));
-//      else
-//        sender.reset(new ResultSender(thd, result_output, unit_for_union->item_list));
-//    } else {
-//      if (export_file_name)
-//        sender.reset(new ResultExportSender(thd, result_output, selects_list->item_list));
-//      else
-//        sender.reset(new ResultSender(thd, result_output, selects_list->item_list));
+      // stonedb8 start
+      if (export_file_name)
+        sender.reset(new ResultExportSender(thd, result_output, *unit_for_union->get_field_list()));
+      else
+        sender.reset(new ResultSender(thd, result_output, *unit_for_union->get_field_list()));
+    } else {
+      if (export_file_name)
+        sender.reset(new ResultExportSender(thd, result_output, *selects_list->get_fields_list()));
+      else
+        sender.reset(new ResultSender(thd, result_output, *selects_list->get_fields_list()));
       // stonedb8 end
     }
 
