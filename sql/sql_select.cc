@@ -125,6 +125,8 @@
 #include "template_utils.h"
 #include "thr_lock.h"
 
+#include "../storage/tianmu/handler/ha_rcengine.h" // tianmu upgrade
+
 using std::max;
 using std::min;
 
@@ -581,6 +583,17 @@ bool Sql_cmd_dml::execute(THD *thd) {
   if (!is_empty_query()) {
     if (lock_tables(thd, lex->query_tables, lex->table_count, 0)) goto err;
   }
+
+  // stonedb8 start
+  int sdb_res, free_join_from_sdb, optimize_after_sdb; //ATIMSTORE UPGRADE
+  if (Tianmu::dbhandler::TIANMU_HandleSelect(thd, lex, result, (ulong)0,
+                                             sdb_res, optimize_after_sdb, free_join_from_sdb) == 0) {
+    my_message(static_cast<int>(8030),
+               "The query includes syntax that is not supported by the storage engine. \
+Either restructure the query with supported syntax, or enable the MySQL core::Query Path in config file to execute the query with reduced performance.",
+               MYF(0));
+  }
+  // stonedb8 end
 
   // Perform statement-specific execution
   if (execute_inner(thd)) goto err;

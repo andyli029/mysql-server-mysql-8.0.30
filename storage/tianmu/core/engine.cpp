@@ -1617,12 +1617,12 @@ const char *Engine::GetFilename(Query_block *selects_list, int &is_dumpfile) {  
     return exchange->file_name;
   }
 
-  /* MySQL 5.7.36
-  if (selects_list->parent_lex->exchange) {
-    is_dumpfile = selects_list->parent_lex->exchange->dumpfile;
-    return selects_list->parent_lex->exchange->file_name;
-  }
-   */
+  ///* MySQL 5.7.36
+//  if (selects_list->parent_lex->exchange) {
+//    is_dumpfile = selects_list->parent_lex->exchange->dumpfile;
+//    return selects_list->parent_lex->exchange->file_name;
+//  }
+  //*/
   // stonedb8 end
 
   return 0;
